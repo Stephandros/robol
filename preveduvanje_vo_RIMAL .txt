@@ -1,0 +1,181 @@
+// Преведување во јазикот RIMAL.
+// Генеричка функција 'cgen' која секој валиден жетон од синтаксното дрво
+// ќе го преведе во инструкции на јазикот RIMAL.
+
+// =========
+// macros
+// =========
+pushNM =
+	push
+	move regMX regNX
+	push
+popNM
+	pop
+	move regNX regMX
+	pop
+// =========
+// end macros
+// =========
+
+// Вчитување на вредност во регистар
+cgen(val, N) = move val regNX
+cgen(val, M) = move val regMX
+cgen(val, G) = move val regGX
+
+// Логички операции
+cgen(opl == opr, label) =	
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JIE label
+cgen(opl != opr, label) =
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JNE label
+cgen(opl < opr, label) =
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JIL label
+cgen(opl <= opr, label) =
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JLE label
+cgen(opl > opr, label) =
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JM label
+cgen(opl => opr, label) =
+	pushNM
+	cgen(opl, N)
+	cgen(opr, M)
+	cmp regNX regMX
+	popNM
+	JME label
+
+// Контролни команди за избор - АКО (за АКО-ИНАКУ се исти)
+cgen(Ако жетон ! commands !) =
+	cmp regC $C
+	JNE here
+	cgen(commands)
+	here:
+cgen(Ако Ѕид ! commands !) =
+	cmp regC $W
+	JNE here
+	cgen(commands)
+	here:
+cgen(Ако dir ! commands !) =
+	push
+	cgen(dir, N)
+	cmp regD regNX
+	pop
+	JNE here
+	cgen(commands)
+	here:
+cgen(Ако (expr) ! commands !) = 
+	push
+	cgen(expr, N)	
+	cmp regNX 1
+	pop
+	JNE here
+	cgen(commands)
+	here:
+
+// Команди за повторување
+cgen(Повторувај val пати: ! commands !) =
+	push	
+	cgen(val, N)
+	while:
+	cmp regNX 0
+	JE end_while:
+	cgen(commands)
+	decN
+	JMP while
+	end_while:
+	pop
+cgen(Повторувај до жетон: ! commands !) =
+	while:
+	cmp regC $C
+	JE end_while:
+	cgen(commands)
+	GO
+	JMP while
+	end_while:	
+cgen(Повторувај до Ѕид: ! commands !) =
+	while:
+	cmp regC $W
+	JE end_while:
+	cgen(commands)
+	GO	
+	JMP while
+	end_while:	
+cgen(Повторувај до (expr): ! commands !) =
+	push	
+	cgen(expr, N)
+	while:
+	cmp regNX 1
+	JE end_while:
+	cgen(commands)	
+	JMP while
+	end_while:
+	pop
+
+// Декларација на процедура
+cgen(процедура name (args) почеток commands крај) =
+	name:
+	data type arg1
+	data type arg2
+	data type arg3
+	...
+	cgen(commands)
+	ret
+
+// Повик на процедура
+cgen(name (args)) =
+	call name (args)
+
+// Аритметички операции
+cgen(opl + opr) =
+	pushMN
+	cgen(opl, N)
+	cgen(opr, M)
+	add regNX regMX
+cgen(opl - opr) =
+	pushMN
+	cgen(opl, N)
+	cgen(opr, M)
+	sub regNX regMX
+cgen(opl * opr) =
+	pushMN
+	cgen(opl, N)
+	cgen(opr, M)
+	mul regNX regMX
+cgen(opl / opr)
+	pushMN
+	cgen(opl, N)
+	cgen(opr, M)
+	div regNX regMX
+cgen(opl % opr)
+	pushMN
+	cgen(opl, N)
+	cgen(opr, M)
+	mod regNX regMX
+
+// Акции на робот
+cgen(СвртиЛево) = RL
+cgen(СвртиДесно) = RR
+cgen(Земи) = TK
+cgen(Остави) = LV
