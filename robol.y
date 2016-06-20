@@ -65,7 +65,12 @@ eden:
 nesto:
 		POCETOK VARIABLE function KRAJ  { symtab[$2].declared= 1; symtab[$2].op[0]= $3; }
 		| function2
-		| CALL VARIABLE { if(symtab[$2].declared==0) yyerror("not declared"); ex(symtab[$2].op[0]); /*freeNode($1);*/ }
+		| CALL VARIABLE {
+		if(symtab[$2].declared==0)
+		    yyerror("not declared");
+		ex(symtab[$2].op[0]);
+		translate(symtab[$2].op[0]);
+		/*freeNode($1);*/ }
 		;
 
 		
@@ -76,7 +81,7 @@ function:
         ;
 		
 function2:
-		komanda { ex($1); freeNode($1); }
+		komanda { ex($1); translate($1); freeNode($1); }
 		;
 	
 
@@ -88,15 +93,19 @@ komanda:
         | PRINT expr NEWLINE                 { $$ = opr(PRINT, 1, $2); }
 		| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
 		| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
-        | VARIABLE '=' expr NEWLINE          
-		{ 
-		if(symtab[$1].declared==0) 
-			yyerror("not declared"); 
-		if(symtab[$1].tip!=getType($3)) 
-			yyerror("type mismatch");  
-		$$ = opr('=', 2, id($1,symtab[$1].tip), $3);  
-		}
-		| VARIABLE '=' NASOKA NEWLINE      { if(symtab[$1].declared==0) yyerror("not declared"); if(symtab[$1].tip==0) yyerror("not a nasoka"); $$ = opr('=', 2, id($1,symtab[$1].tip), con($3,1));}
+        | VARIABLE '=' expr NEWLINE  {
+            if(symtab[$1].declared==0)
+                yyerror("not declared");
+            if(symtab[$1].tip!=getType($3))
+                yyerror("type mismatch");
+            $$ = opr('=', 2, id($1,symtab[$1].tip), $3); }
+		| VARIABLE '=' NASOKA NEWLINE {
+            if(symtab[$1].declared==0)
+                yyerror("not declared");
+            if(symtab[$1].tip==0)
+                yyerror("not a nasoka");
+            $$ = opr('=', 2, id($1,symtab[$1].tip), con($3,1));
+            }
 		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ, 2, $4, $9); }
 		| POVTORUVAJ INTEGER PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, con($2,0), $7); }
         | IF '(' expr ')' '!' komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $6); }

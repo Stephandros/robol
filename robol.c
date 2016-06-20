@@ -90,3 +90,96 @@ int ex(nodeType *p) {
     }
     return 0;
 }
+
+int a;
+int b;
+int gn=0;
+//0 means const, 1 means expression
+int translate(nodeType *p){
+	int a;
+	int b;
+	int k;
+	char str[15];
+	char str2[15];
+
+	if (!p) return 0;
+	switch(p->type) {
+		case typeCon:
+			if(gn==0) printf("move nx %d\n",p->con.value);
+			if(gn==1) printf("move mx %d\n",p->con.value);
+			gn++; gn=gn%2;
+			return 0;
+		case typeOpr:
+			switch(p->opr.oper) {
+				case '*':
+					a=p->opr.op[0]->type;
+					b=p->opr.op[1]->type;
+
+					if(a==typeCon&&b==typeOpr) {
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+					}
+					else {
+						a=translate(p->opr.op[0]);
+						b=translate(p->opr.op[1]);
+					}
+
+					if(a==0&&b==0){
+						printf("mul nx mx\n");
+						printf("push\n");
+					} else if(a==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("mul mx nx\n");
+						printf("push\n");
+					}
+					else if (b==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("mul mx nx\n");
+						printf("push\n");
+					} else {
+						printf("pop\n");
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("mul mx nx\n");
+						printf("push\n");
+
+					}
+					printf("\n");
+					gn=0;
+					return 1;
+
+				case '+':
+					a = translate(p->opr.op[0]);
+					b = translate(p->opr.op[1]);
+					if(a==0&&b==0){
+						printf("add nx mx\n");
+						printf("push\n");
+					} else if(a==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("add mx nx\n");
+						printf("push\n");
+					}
+					else if (b==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("add mx nx\n");
+						printf("push\n");
+					} else {
+						printf("pop\n");
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("add mx nx\n");
+						printf("push\n");
+
+					}
+					printf("\n");
+					gn=0; return 1;
+			}
+	}
+	return 0;
+
+
+}
