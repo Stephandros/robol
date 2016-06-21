@@ -47,6 +47,8 @@ int lookup(char* sym)
 	abort(); /* tried them all, table is full */
 }
 
+int counter;
+
 int ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
@@ -55,16 +57,11 @@ int ex(nodeType *p) {
 	case typeFunction: ex(p->opr.op[0]); ex(p->opr.op[1]); return 0;
     case typeOpr:
         switch(p->opr.oper) {
-        case WHILE:     while(ex(p->opr.op[0])) ex(p->opr.op[1]); return 0;
-		case POVTORUVAJ:     while(ex(p->opr.op[0])) ex(p->opr.op[1]); return 0;
-		case POVTORUVAJ_2: while((p->opr.op[0])->con.value>0) { ((p->opr.op[0])->con.value)--; ex(p->opr.op[1]); } return 0;
-        case IF:        if (ex(p->opr.op[0]))
-                            ex(p->opr.op[1]);
-                        else if (p->opr.nops > 2)
-                            ex(p->opr.op[2]);
-                        return 0;
-        case PRINT:     if(p->opr.op[0]->id.s_type==0) printf("%d\n", ex(p->opr.op[0])); 
-		else switch(ex(p->opr.op[0])){
+        case WHILE:			while(ex(p->opr.op[0])) ex(p->opr.op[1]); return 0;
+		case POVTORUVAJ:	while(ex(p->opr.op[0])) ex(p->opr.op[1]); return 0;
+		case POVTORUVAJ_2:	counter = (p->opr.op[0])->con.value; while(counter>0) { counter--; ex(p->opr.op[1]); } return 0;
+        case IF:			if (ex(p->opr.op[0])) ex(p->opr.op[1]); else if (p->opr.nops > 2) ex(p->opr.op[2]); return 0;
+        case PRINT:			if(p->opr.op[0]->id.s_type==0) printf("%d\n", ex(p->opr.op[0])); else switch(ex(p->opr.op[0])){
 		case 0: printf("I"); break;
 		case 1: printf("Z"); break;	
 		case 2: printf("S"); break;
@@ -146,7 +143,6 @@ int translate(nodeType *p){
 						printf("push\n");
 
 					}
-					printf("\n");
 					gn=0;
 					return 1;
 
@@ -173,10 +169,90 @@ int translate(nodeType *p){
 						printf("pop\n");
 						printf("add mx nx\n");
 						printf("push\n");
-
 					}
-					printf("\n");
 					gn=0; return 1;
+
+
+
+				case ';':
+				{
+					translate(p->opr.op[0]);
+					return translate(p->opr.op[1]);
+				}
+
+				case EQ:
+				case NE:
+				case '>':
+				case GE:
+				case '<':
+				case LE:				
+				{
+					a = translate(p->opr.op[0]);
+					b = translate(p->opr.op[1]);
+					if(a == 0 && b == 0)
+					{						
+						printf("cmp regNX regMX\n");
+					}
+					else if(a == 0)
+					{
+						printf("move regNX regMX\n");
+						printf("pop\n");						
+						printf("cmp regNX regMX\n");
+					}
+					else if(b == 0)
+					{						
+						printf("move regNX regMX\n");
+						printf("pop\n");
+						printf("cmp regNX regMX\n");
+					}
+					else
+					{
+						printf("pop\n");
+						printf("move regMX regNX\n");
+						printf("pop\n");
+						printf("cmp regNX regMX\n");
+					}
+					gn = 0;
+					return 1;
+				}		
+
+				case IF:
+				{
+					translate(p->opr.op[0]);		// this contains the condition
+					switch ((p->opr.op[0])->opr.oper)
+					{
+						case EQ:  { printf("JNE here\n"); break; }
+						case NE:  { printf("JIE here\n"); break; }
+						case '>': { printf("JL here\n"); break; }
+						case GE:  { printf("JLE here\n"); break; }
+						case '<': { printf("JM here\n"); break; }
+						case LE:  { printf("JME here\n"); break; }						
+					}							
+					translate(p->opr.op[1]);		// this contains the if statements
+					printf("here:\n");
+					if (p->opr.nops > 2)
+					{
+						translate(p->opr.op[2]);	// this contains the else statements
+					}
+					gn = 0;
+					return 1;
+				}
+
+				case POVTORUVAJ_2: // povtoruvaj x pati ! ... !
+				{
+					printf("move regGX %d\n", (p->opr.op[0])->con.value);					
+					printf("while:\n");					
+					printf("cmp regGX 0\n");
+					printf("JIE end_while\n");
+					translate(p->opr.op[1]);					
+					printf("move regPX regNX\n");
+					printf("decN\n");					
+					printf("move regNX regPX\n");					
+					printf("JMP while\n");
+					printf("end_while:\n");
+					gn = 0;
+					return 1;
+				}
 			}
 	}
 	return 0;
