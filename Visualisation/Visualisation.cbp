@@ -42,9 +42,17 @@
 			<Add library="gdi32" />
 			<Add directory="E:/Programs/CodeBlocks/MinGW/lib" />
 		</Linker>
-		<Unit filename="framework.cpp" />
+		<Unit filename="framework.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="framework.h" />
-		<Unit filename="main.cpp" />
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="queue.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="queue.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

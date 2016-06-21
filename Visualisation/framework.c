@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
 #include "framework.h"
 
 typedef struct Image
@@ -21,15 +22,17 @@ typedef struct Indices
 {
     GLint i;
     GLint j;
-    bool equal(Indices indices)
-    {
-        return (i == indices.i && j == indices.j);
-    }
 } Indices;
+int equal(Indices indices1, Indices indices2)
+{
+    return (indices1.i == indices2.i && indices1.j == indices2.j);
+}
 
 // ===========================================================================
 // Data
 // ===========================================================================
+
+queue* moves;
 
 static GLuint robot_image;
 static GLuint coin_image;
@@ -41,11 +44,10 @@ static GLuint barrier_vertical_image;
 const GLdouble d = 1.0;
 
 const GLint fields = 10;
-
-Point grid[fields][fields];
+Point grid[10][10];
 
 const GLint coins_count = 4;
-Indices coin_positions[coins_count] = { {6, 3}, {2, 8}, {8, 7}, {4, 4} };
+Indices coin_positions[4] = { {6, 3}, {2, 8}, {8, 7}, {4, 4} };
 const Indices taken_coin = {-1, -1};
 
 Indices robot_position = {2, 4};
@@ -79,6 +81,12 @@ void draw_coins();
 // end   : ending index
 void draw_barriers(GLint mode, GLint index, GLint start, GLint end);
 void draw_robot();
+
+void odi();         // 0
+void svrti_levo();  // 1
+void svrti_desno(); // 2
+void zemi();        // 3
+void ostavi();      // 4
 
 void LoadTexture(char* fname, GLuint* texName);
 int ImageLoad(char* filename, Image* image);
@@ -134,7 +142,19 @@ void key(unsigned char key, int x, int y)
 
 void idle(void)
 {
-    glutPostRedisplay();
+    while(!empty(moves))
+    {
+        int move = dequeue(moves);
+        switch (move)
+        {
+        case 0: { odi();         Sleep(500); display(); printf("odi\n");         break; }
+        case 1: { svrti_levo();  Sleep(0);   display(); printf("svrti_levo\n");  break; }
+        case 2: { svrti_desno(); Sleep(0);   display(); printf("svrti_desno\n"); break; }
+        case 3: { zemi();        Sleep(500); display(); printf("zemi\n");        break; }
+        case 4: { ostavi();      Sleep(500); display(); printf("ostavi\n");      break; }
+        }
+    }
+
 }
 
 void initEverything(int argc, char *argv[])
@@ -153,6 +173,11 @@ void initEverything(int argc, char *argv[])
     init();
 
     glutMainLoop();
+}
+
+void ANIMATE(queue * q)
+{
+    moves = q;
 }
 
 // ===========================================================================
@@ -184,10 +209,11 @@ void init_grid()
     GLdouble horizontal_count_half = fields / 2 - d/2;
 
     GLint horizontal = 0;
-    for(GLdouble j = -horizontal_count_half * d; j <= horizontal_count_half * d; j += d)
+    GLdouble i, j;
+    for(j = -horizontal_count_half * d; j <= horizontal_count_half * d; j += d)
     {
         GLint vertical = 0;
-        for(GLdouble i = - vertical_count_half * d; i <= vertical_count_half * d; i += d)
+        for(i = - vertical_count_half * d; i <= vertical_count_half * d; i += d)
         {
             grid[vertical][horizontal].x = i;
             grid[vertical][horizontal].y = j;
@@ -227,9 +253,10 @@ void draw_quad(GLdouble quad_size)
 void draw_tiles()
 {
     glBindTexture(GL_TEXTURE_2D, tile_image);
-    for(GLint j = 0; j < fields; ++j)
+    GLint i, j;
+    for(j = 0; j < fields; ++j)
     {
-        for(GLint i = 0; i < fields; ++i)
+        for(i = 0; i < fields; ++i)
         {
             glPushMatrix();
                 glTranslated(grid[i][j].x, grid[i][j].y, 0.0);
@@ -243,9 +270,10 @@ void draw_tiles()
 void draw_coins()
 {
     glBindTexture(GL_TEXTURE_2D, coin_image);
-    for(GLint i = 0; i < coins_count; ++i)
+    GLint i;
+    for(i = 0; i < coins_count; ++i)
     {
-        if(coin_positions[i].equal(taken_coin))
+        if(equal(coin_positions[i], taken_coin))
             continue;
         GLint ci = coin_positions[i].i;
         GLint cj = coin_positions[i].j;
@@ -259,10 +287,11 @@ void draw_coins()
 
 void draw_barriers(GLint mode, GLint index, GLint start, GLint end)
 {
+    GLint i;
     if(mode == 0)
     {
         glBindTexture(GL_TEXTURE_2D, barrier_vertical_image);
-        for(GLint i = start; i <= end; ++i)
+        for(i = start; i <= end; ++i)
         {
             glPushMatrix();
                 glTranslated(grid[i][index].x, grid[i][index].y, 0.0);
@@ -274,7 +303,7 @@ void draw_barriers(GLint mode, GLint index, GLint start, GLint end)
     if(mode == 1)
     {
         glBindTexture(GL_TEXTURE_2D, barrier_hotizontal_image);
-        for(GLint i = start; i <= end; ++i)
+        for(i = start; i <= end; ++i)
         {
             glPushMatrix();
                 glTranslated(grid[index][i].x, grid[index][i].y, 0.0);
@@ -342,9 +371,10 @@ void svrti_desno()
 
 void zemi()
 {
-    for(int i = 0; i < coins_count; ++i)
+    GLint i;
+    for(i = 0; i < coins_count; ++i)
     {
-        if(robot_position.equal(coin_positions[i]))
+        if(equal(robot_position, coin_positions[i]))
         {
             coin_positions[i] = taken_coin;
             taken_coins++;
@@ -357,9 +387,10 @@ void ostavi()
 {
     if(taken_coins > 0)
     {
-        for(int i = 0; i < coins_count; ++i)
+        GLint i;
+        for(i = 0; i < coins_count; ++i)
         {
-            if(coin_positions[i].equal(taken_coin))
+            if(equal(coin_positions[i], taken_coin))
             {
                 coin_positions[i] = robot_position;
                 taken_coins--;
