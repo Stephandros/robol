@@ -19,8 +19,8 @@ void yyerror(char *);
 "kraj"			return KRAJ;
 "povikaj"		return CALL;
 
-"broj"			return T_BROJ;
-"nasoka"		return T_NASOKA;
+"broj"			{yylval.iValue =0; return T_BROJ;}//0 is broj
+"nasoka"		{yylval.iValue =1; return T_NASOKA;} //1 is nasoka
 I			{yylval.iValue =0; return NASOKA;}
 Z			{yylval.iValue =1; return NASOKA;}
 S			{yylval.iValue =2; return NASOKA;}
@@ -30,7 +30,7 @@ J			{yylval.iValue =3; return NASOKA;}
 
 
 [a-zA-z][a-zA-Z0-9]*       { 
-				yylval.sIndex = lookup(yytext);
+				yylval.iValue = lookup(yytext);
                 //yylval.sIndex = *yytext - 'a';
                 return VARIABLE;
             }
@@ -45,7 +45,7 @@ J			{yylval.iValue =3; return NASOKA;}
                 return INTEGER;
             }
 
-[-()<>=+*/;:{}.] {
+[-()<>=+*/;:{}.,] {
                 return *yytext;
              }
 			 

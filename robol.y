@@ -30,7 +30,7 @@ struct symbol symtab[NHASH];
 %error-verbose
 
 %token <iValue> INTEGER NASOKA
-%token <sIndex> VARIABLE
+%token <iValue> VARIABLE
 %token WHILE IF PRINT
 %token NEWLINE POVTORUVAJ DO PATI OSNOVNA_KOMANDA PROCEDURA POCETOK KRAJ T_BROJ T_NASOKA CALL
 %token POVTORUVAJ_2
@@ -44,7 +44,9 @@ struct symbol symtab[NHASH];
 
 //%type <nPtr> stmt stmt_list
 %type <nPtr> komanda komanda_list expr
-%type <nPtr> function 
+%type <nPtr> function
+
+%type <nPtr> decl varlist
 
 
 %%
@@ -83,6 +85,16 @@ function:
 function2:
 		komanda { ex($1); translate($1); freeNode($1); }
 		;
+
+
+decl:
+     T_BROJ varlist {$$=$2;}
+     | T_NASOKA varlist {$$=$2;}
+    ;
+varlist:
+    VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0; $$ = id($1,$<iValue>0); }
+    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; /*$$ = opr(';',$1, id($3,$<iValue>0)); */}
+    ;
 	
 
 		
@@ -91,8 +103,9 @@ komanda:
 		| OSNOVNA_KOMANDA NEWLINE		  	 { $$ = opr(OSNOVNA_KOMANDA, 2, NULL, NULL); }
         | expr NEWLINE                       { $$ = $1; }
         | PRINT expr NEWLINE                 { $$ = opr(PRINT, 1, $2); }
-		| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
-		| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
+        | decl NEWLINE                              {$$ = $1;}
+		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
+		//| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
         | VARIABLE '=' expr NEWLINE  {
             if(symtab[$1].declared==0)
                 yyerror("not declared");

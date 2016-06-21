@@ -1,0 +1,10 @@
+.idea/misc.xml
+.idea/modules.xml
+.idea/robol.iml
+.idea/vcs.xml
+.idea/workspace.xml
+lex.yy.c
+lex.yy.o
+y.tab.c
+y.tab.h
+y.tab.o
