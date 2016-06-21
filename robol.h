@@ -1,3 +1,5 @@
+#define NHASH 9997
+
 typedef enum { typeCon, typeId, typeOpr, typeFunction } nodeEnum;
 
 struct symbol {
@@ -6,6 +8,7 @@ struct symbol {
 	int tip;
 	int declared;
 	struct nodeTypeTag *op[1];
+	struct symbol *symboltable;
 };
 
 struct function {
@@ -46,5 +49,6 @@ typedef struct nodeTypeTag {
 } nodeType;
 
 #define NHASH 9997
-extern struct symbol symtab[NHASH];
+struct symbol symboltable[NHASH];
+extern struct symbol *symtab;
 //extern int symtab[NHASH];

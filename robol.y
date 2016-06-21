@@ -14,10 +14,14 @@ void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
 
+
 nodeType *fct(nodeType *l,nodeType *r);
 
 void yyerror(char *s);
-struct symbol symtab[NHASH];
+//struct symbol symtab[NHASH];
+struct symbol *symtab;
+struct symbol *globsym;
+
 //int symtab[NHASH];                    /* symbol table */
 %}
 
@@ -48,6 +52,8 @@ struct symbol symtab[NHASH];
 
 %type <nPtr> decl varlist
 
+%type <iValue> poc
+
 
 %%
 
@@ -55,7 +61,7 @@ program:
         /*PROCEDURA '('')' NEWLINE POCETOK NEWLINE function KRAJ             { //exit(0); 
 		}*/
 		
-		  eden {}
+		  eden {/**/}
         ;
 		
 		
@@ -63,21 +69,39 @@ eden:
 	eden nesto
 	|
 	;
+
+poc:
+    POCETOK VARIABLE {
+        symtab[$2].declared= 1;
+        globsym=symtab;
+        $$=$2;
+        globsym[$2].symboltable = malloc(NHASH*sizeof(struct symbol));
+        symtab = globsym[$2].symboltable;
+        }
+    ;
 		
 nesto:
-		POCETOK VARIABLE function KRAJ  { symtab[$2].declared= 1; symtab[$2].op[0]= $3; }
+		poc function KRAJ  {
+            /*symtab[$1].op[0]= $2;*/
+            globsym[$1].op[0]=$2;
+            symtab =symboltable;
+		    }
 		| function2
 		| CALL VARIABLE {
-		if(symtab[$2].declared==0)
-		    yyerror("not declared");
-		ex(symtab[$2].op[0]);
-		translate(symtab[$2].op[0]);
-		/*freeNode($1);*/ }
+            if(symtab[$2].declared==0)
+                yyerror("not declared");
+            globsym = symtab;
+            symtab = globsym[$2].symboltable;
+            ex(globsym[$2].op[0]);
+            translate(globsym[$2].op[0]);
+            /*freeNode($1);*/
+            symtab =symboltable;
+            }
 		;
 
 		
 function:
-          function komanda       { $$ = fct($1,$2); }
+          function komanda       { printf("in here"); $$ = fct($1,$2); }
         | /* NULL */ {$$=NULL;}
 		| error {printf("ERROR!!!");}
         ;
@@ -283,6 +307,7 @@ void yyerror(char *s) {
 }
 
 int main(void) {
+    symtab = symboltable;
     yyparse();
     return 0;
 }
