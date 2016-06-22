@@ -183,13 +183,13 @@ expr:
         | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
         | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
         | expr '*' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('*',getType($1), 2, $1, $3);  }
-        | expr '/' expr         { $$ = opr('/', 2, $1, $3); }
-        | expr '<' expr         { $$ = opr('<', 2, $1, $3); }
-        | expr '>' expr         { $$ = opr('>', 2, $1, $3); }
-        | expr GE expr          { $$ = opr(GE, 2, $1, $3); }
-        | expr LE expr          { $$ = opr(LE, 2, $1, $3); }
-        | expr NE expr          { $$ = opr(NE, 2, $1, $3); }
-        | expr EQ expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match"); $$ = opr(EQ, 2, $1, $3); }
+        | expr '/' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('/',getType($1), 2, $1, $3);  }
+        | expr '<' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('<',getType($1), 2, $1, $3);  }
+        | expr '>' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('>',getType($1), 2, $1, $3);  }
+        | expr GE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(GE,3, 2, $1, $3);  }
+        | expr LE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(LE,3, 2, $1, $3);  }
+        | expr NE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(NE, 3, 2, $1, $3);  }
+        | expr EQ expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(EQ,3, 2, $1, $3);  }
         | '(' expr ')'          { $$ = $2; }
         ;
 
