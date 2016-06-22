@@ -70,7 +70,11 @@ int ex(nodeType *p) {
 		return 0;
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
 		case NEWLINE:       ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case OSNOVNA_KOMANDA: printf("%d\n",p->opr.oper); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case ODI: printf("odam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case ZEMI: printf("zemam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case OSTAVI: printf("ostavam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case SVRTIDESNO: printf("vrtam desno\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case SVRTILEVO: printf("vrtam levo\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
         case '=':       return (symtab[p->opr.op[0]->id.i].value) = ex(p->opr.op[1]);
         case UMINUS:    return -ex(p->opr.op[0]);
         case '+':       return ex(p->opr.op[0]) + ex(p->opr.op[1]);

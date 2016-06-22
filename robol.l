@@ -26,7 +26,12 @@ Z			{yylval.iValue =1; return NASOKA;}
 S			{yylval.iValue =2; return NASOKA;}
 J			{yylval.iValue =3; return NASOKA;}
 
-"SvrtiLevo"|"SvrtiDesno"|"Odi"|"Zemi"|"Ostavi"	{ return OSNOVNA_KOMANDA; }	
+"SvrtiLevo" return SVRTILEVO;
+"SvrtiDesno" return SVRTIDESNO;
+"Odi" return ODI;
+"Zemi" return ZEMI;
+"Ostavi"   return OSTAVI;
+
 
 
 [a-zA-z][a-zA-Z0-9]*       { 

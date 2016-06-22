@@ -36,7 +36,7 @@ struct symbol *globsym;
 %token <iValue> INTEGER NASOKA
 %token <iValue> VARIABLE
 %token WHILE IF PRINT
-%token NEWLINE POVTORUVAJ DO PATI OSNOVNA_KOMANDA PROCEDURA POCETOK KRAJ T_BROJ T_NASOKA CALL
+%token NEWLINE POVTORUVAJ DO PATI PROCEDURA POCETOK KRAJ T_BROJ T_NASOKA CALL SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI
 %token POVTORUVAJ_2
 %nonassoc IFX
 %nonassoc ELSE
@@ -48,10 +48,9 @@ struct symbol *globsym;
 
 //%type <nPtr> stmt stmt_list
 %type <nPtr> komanda komanda_list expr
-%type <nPtr> function
+%type <nPtr> function osnovna_komanda
 
 %type <nPtr> decl varlist
-
 %type <iValue> poc
 
 
@@ -101,7 +100,7 @@ nesto:
 
 		
 function:
-          function komanda       { printf("in here"); $$ = fct($1,$2); }
+          function komanda       { /*printf("in here");*/ $$ = fct($1,$2); }
         | /* NULL */ {$$=NULL;}
 		| error {printf("ERROR!!!");}
         ;
@@ -117,14 +116,19 @@ decl:
     ;
 varlist:
     VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0; $$ = id($1,$<iValue>0); }
-    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; /*$$ = opr(';',$1, id($3,$<iValue>0)); */}
+    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
 	
-
-		
+osnovna_komanda:
+        ODI {$$=opr(ODI, 2, NULL, NULL);}
+        |ZEMI {$$=opr(ZEMI, 2, NULL, NULL);}
+        |OSTAVI {$$=opr(OSTAVI, 2, NULL, NULL);}
+        |SVRTILEVO {$$=opr(SVRTILEVO, 2, NULL, NULL);}
+        |SVRTIDESNO {$$=opr(SVRTIDESNO, 2, NULL, NULL);}
+		;
 komanda:
 		  NEWLINE                            { $$ = opr(NEWLINE, 2, NULL, NULL); }
-		| OSNOVNA_KOMANDA NEWLINE		  	 { $$ = opr(OSNOVNA_KOMANDA, 2, NULL, NULL); }
+		| osnovna_komanda NEWLINE		  	 { $$ = $1;  }
         | expr NEWLINE                       { $$ = $1; }
         | PRINT expr NEWLINE                 { $$ = opr(PRINT, 1, $2); }
         | decl NEWLINE                              {$$ = $1;}
@@ -133,8 +137,10 @@ komanda:
         | VARIABLE '=' expr NEWLINE  {
             if(symtab[$1].declared==0)
                 yyerror("not declared");
-            if(symtab[$1].tip!=getType($3))
+            if(symtab[$1].tip!=getType($3)){
+                printf("type is %d %d\n",getType($3),symtab[$1].tip);
                 yyerror("type mismatch");
+                }
             $$ = opr('=', 2, id($1,symtab[$1].tip), $3); }
 		| VARIABLE '=' NASOKA NEWLINE {
             if(symtab[$1].declared==0)
@@ -153,31 +159,14 @@ komanda_list:
           komanda                  { $$ = $1;  }
         | komanda_list komanda       { $$ = opr(';', 2, $1, $2); }
         ;
-/*
-stmt:
-          ';'                            { $$ = opr(';', 2, NULL, NULL); }
-        | expr ';'                       { $$ = $1; }
-        | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }
-        | VARIABLE '=' expr ';'          { $$ = opr('=', 2, id($1), $3); }
-        | WHILE '(' expr ')' stmt        { $$ = opr(WHILE, 2, $3, $5); }
-		| POVTORUVAJ '(' expr ')' '!' stmt_list '!'   { $$ = opr(POVTORUVAJ, 2, $3, $6); }
-        | IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
-        | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
-        | '{' stmt_list '}'              { $$ = $2; }
-        ;
 
-stmt_list:
-          stmt                  { $$ = $1; }
-        | stmt_list stmt        { $$ = opr(';', 2, $1, $2); }
-        ;
-*/
 
 expr:
           INTEGER               { $$ = con($1,0); }
         | VARIABLE              { if(symtab[$1].declared==0) yyerror("not declared"); $$ = id($1,symtab[$1].tip); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
-        | expr '-' expr         { $$ = opr('-', 2, $1, $3); }
+        | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
         | expr '*' expr         { $$ = opr('*', 2, $1, $3); }
         | expr '/' expr         { $$ = opr('/', 2, $1, $3); }
         | expr '<' expr         { $$ = opr('<', 2, $1, $3); }
