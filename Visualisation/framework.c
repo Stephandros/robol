@@ -150,8 +150,8 @@ void idle(void)
         case 0: { odi();         Sleep(500); display(); printf("odi\n");         break; }
         case 1: { svrti_levo();  Sleep(0);   display(); printf("svrti_levo\n");  break; }
         case 2: { svrti_desno(); Sleep(0);   display(); printf("svrti_desno\n"); break; }
-        case 3: { zemi();        Sleep(0); display(); printf("zemi\n");        break; }
-        case 4: { ostavi();      Sleep(0); display(); printf("ostavi\n");      break; }
+        case 3: { zemi();        Sleep(0);   display(); printf("zemi\n");        break; }
+        case 4: { ostavi();      Sleep(0);   display(); printf("ostavi\n");      break; }
         }
     }
 
