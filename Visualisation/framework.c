@@ -1,4 +1,3 @@
-#include <GL/glut.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -18,11 +17,6 @@ typedef struct Point
     GLdouble y;
 } Point;
 
-typedef struct Indices
-{
-    GLint i;
-    GLint j;
-} Indices;
 int equal(Indices indices1, Indices indices2)
 {
     return (indices1.i == indices2.i && indices1.j == indices2.j);
@@ -42,15 +36,57 @@ static GLuint barrier_vertical_image;
 
 // This variable represents the quad dimension.
 const GLdouble d = 1.0;
-
-const GLint fields = 10;
-Point grid[10][10];
-
-const GLint coins_count = 4;
-Indices coin_positions[4] = { {6, 3}, {2, 8}, {8, 7}, {4, 4} };
 const Indices taken_coin = {-1, -1};
 
-Indices robot_position = {2, 4};
+GLint fields = 10;
+Point** grid;
+void set_grid(GLint f)
+{
+    free(grid);
+    fields = f;
+    grid = (Point**) malloc(fields * sizeof(Point*));
+    GLint i = 0;
+    for(i = 0; i < fields; ++i) grid[i] = (Point*) malloc(fields * sizeof(Point));
+}
+
+GLint barrier_count = 0;
+Barrier_Data* barrier_positions;
+void set_barrier_positions(Barrier_Data positions[], int count)
+{
+    free(barrier_positions);
+    barrier_count = count;
+    barrier_positions = (Barrier_Data*) malloc(barrier_count * sizeof(Barrier_Data));
+    GLint i = 0;
+    for(i = 0; i < barrier_count; ++i)
+    {
+        barrier_positions[i].mode  = positions[i].mode;
+        barrier_positions[i].index = positions[i].index;
+        barrier_positions[i].start = positions[i].start;
+        barrier_positions[i].end   = positions[i].end;
+    }
+}
+
+GLint coins_count = 0;
+Indices* coin_positions;
+void set_coin_positions(Indices positions[], int count)
+{
+    free(coin_positions);
+    coins_count = count;
+    coin_positions = (Indices*) malloc(coins_count * sizeof(Indices));
+    GLint i = 0;
+    for(i = 0; i < coins_count; ++i)
+    {
+        coin_positions[i].i = positions[i].i;
+        coin_positions[i].j = positions[i].j;
+    }
+}
+
+Indices robot_position;
+void set_robot_position(GLint i, GLint j)
+{
+    robot_position.i = i;
+    robot_position.j = j;
+}
 
 // This variable holds the number of taken_coin coins by the robot.
 GLint taken_coins = 0;
@@ -60,6 +96,10 @@ GLint taken_coins = 0;
 // south = 2
 // west  = 3
 GLint robot_direction = 0;
+void set_robot_direction(GLint direction)
+{
+    robot_direction = direction;
+}
 
 // ===========================================================================
 // End Data
@@ -75,11 +115,12 @@ void init_grid();
 void draw_quad(GLdouble quad_size);
 void draw_tiles();
 void draw_coins();
+void draw_barriers();
 // mode  : row based (0) or column based (1) drawing
 // index : the row or column
 // start : starting index
 // end   : ending index
-void draw_barriers(GLint mode, GLint index, GLint start, GLint end);
+void draw_barrier(GLint mode, GLint index, GLint start, GLint end);
 void draw_robot();
 
 void odi();         // 0
@@ -103,14 +144,14 @@ void display()
     draw_tiles();
 
     // frame
-    draw_barriers(0, 0,          0, fields - 1);
-    draw_barriers(0, fields - 1, 0, fields - 1);
-    draw_barriers(1, 0,          1, fields - 2);
-    draw_barriers(1, fields - 1, 1, fields - 2);
+    draw_barrier(0, 0,          0, fields - 1);
+    draw_barrier(0, fields - 1, 0, fields - 1);
+    draw_barrier(1, 0,          1, fields - 2);
+    draw_barrier(1, fields - 1, 1, fields - 2);
+
 
     draw_coins();
-    draw_barriers(0, 2, 2, 6);
-    draw_barriers(1, 6, 4, 7);
+    draw_barriers();
     draw_robot();
 
     glutSwapBuffers();
@@ -147,11 +188,11 @@ void idle(void)
         int move = dequeue(moves);
         switch (move)
         {
-        case 0: { odi();         Sleep(500); display(); printf("odi\n");         break; }
-        case 1: { svrti_levo();  Sleep(0);   display(); printf("svrti_levo\n");  break; }
-        case 2: { svrti_desno(); Sleep(0);   display(); printf("svrti_desno\n"); break; }
-        case 3: { zemi();        Sleep(0);   display(); printf("zemi\n");        break; }
-        case 4: { ostavi();      Sleep(0);   display(); printf("ostavi\n");      break; }
+        case 0: { odi();         Sleep(500); display(); /*printf("odi\n");*/         break; }
+        case 1: { svrti_levo();  Sleep(0);   display(); /*printf("svrti_levo\n");*/  break; }
+        case 2: { svrti_desno(); Sleep(0);   display(); /*printf("svrti_desno\n");*/ break; }
+        case 3: { zemi();        Sleep(0);   display(); /*printf("zemi\n"); */       break; }
+        case 4: { ostavi();      Sleep(0);   display(); /*printf("ostavi\n");*/      break; }
         }
     }
 
@@ -285,7 +326,21 @@ void draw_coins()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void draw_barriers(GLint mode, GLint index, GLint start, GLint end)
+void draw_barriers()
+{
+    GLint i = 0;
+    for(i = 0; i < barrier_count; ++i)
+    {
+        draw_barrier(
+            barrier_positions[i].mode,
+            barrier_positions[i].index,
+            barrier_positions[i].start,
+            barrier_positions[i].end
+            );
+    }
+}
+
+void draw_barrier(GLint mode, GLint index, GLint start, GLint end)
 {
     GLint i;
     if(mode == 0)

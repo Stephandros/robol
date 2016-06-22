@@ -262,15 +262,17 @@
 	<stdio.h>
 	"interface.h"
 
-1466532670 source:c:\users\mkoru\desktop\robol repo\visualisation\main.c
+1466616704 source:c:\users\mkoru\desktop\robol repo\visualisation\main.c
 	<stdio.h>
+	<stdlib.h>
+	<string.h>
 	"framework.h"
 
-1466530946 c:\users\mkoru\desktop\robol repo\visualisation\framework.h
+1466616607 c:\users\mkoru\desktop\robol repo\visualisation\framework.h
+	<GL/glut.h>
 	"queue.h"
 
-1466532681 source:c:\users\mkoru\desktop\robol repo\visualisation\framework.c
-	<GL/glut.h>
+1466616773 source:c:\users\mkoru\desktop\robol repo\visualisation\framework.c
 	<stdio.h>
 	<stdlib.h>
 	<math.h>
