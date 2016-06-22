@@ -9,12 +9,9 @@ int main(int argc, char *argv[])
 
     postavi_okolina();
 
-
     queue q;
     init_queue(&q);
-    /*
-    enqueue(&q, 0);
-    enqueue(&q, 0);
+    enqueue(&q, 1);
     enqueue(&q, 0);
     enqueue(&q, 0);
     enqueue(&q, 3);
@@ -22,17 +19,15 @@ int main(int argc, char *argv[])
     enqueue(&q, 0);
     enqueue(&q, 0);
     enqueue(&q, 4);
+    enqueue(&q, 2);
     enqueue(&q, 0);
     enqueue(&q, 0);
-    */
     ANIMATE(&q);
-
 
     initEverything(argc, argv);
 
     return 0;
 }
-
 
 void postavi_okolina()
 {

@@ -188,11 +188,11 @@ void idle(void)
         int move = dequeue(moves);
         switch (move)
         {
-        case 0: { odi();         Sleep(500); display(); /*printf("odi\n");*/         break; }
-        case 1: { svrti_levo();  Sleep(0);   display(); /*printf("svrti_levo\n");*/  break; }
-        case 2: { svrti_desno(); Sleep(0);   display(); /*printf("svrti_desno\n");*/ break; }
-        case 3: { zemi();        Sleep(0);   display(); /*printf("zemi\n"); */       break; }
-        case 4: { ostavi();      Sleep(0);   display(); /*printf("ostavi\n");*/      break; }
+        case 0: { odi();         Sleep(500); display(); printf("odi\n");         break; }
+        case 1: { svrti_levo();  Sleep(500);   display(); printf("svrti_levo\n");  break; }
+        case 2: { svrti_desno(); Sleep(500);   display(); printf("svrti_desno\n"); break; }
+        case 3: { zemi();        Sleep(0);   display(); printf("zemi\n");        break; }
+        case 4: { ostavi();      Sleep(0);   display(); printf("ostavi\n");      break; }
         }
     }
 
@@ -376,6 +376,7 @@ void draw_robot()
     GLint rj = robot_position.j;
     glPushMatrix();
         glTranslated(grid[ri][rj].x, grid[ri][rj].y , 0.0);
+        glRotated(-robot_direction * 90, 0.0, 0.0, 1.0);
         draw_quad(d);
     glPopMatrix();
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -484,8 +485,8 @@ void LoadTexture(char* fname, GLuint* texName)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, img->sizeX, img->sizeY,
                  0, GL_RGB, GL_UNSIGNED_BYTE, img->data);
 }
