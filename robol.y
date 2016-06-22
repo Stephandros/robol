@@ -85,6 +85,7 @@ nesto:
 		poc POCETOK NEWLINE function KRAJ  {
             /*symtab[$1].op[0]= $4;*/
             globsym[$1].op[0]=$4;
+            translate($4);
             symtab =symboltable;
 		    }
 		 | command
@@ -93,14 +94,15 @@ nesto:
 
 command:
         komanda { ex($1); translate($1);  freeNode($1); }
+        |decl { ex($1); freeNode($1); }
         | POVIKAJ VARIABLE {
                  if(symtab[$2].declared==0)
                         yyerror("not declared");
                     globsym = symtab;
                     symtab = globsym[$2].symboltable;
                     ex(globsym[$2].op[0]);
-
-                    translate(globsym[$2].op[0]);
+                    //printf("%d, %d\n",globsym[$2].op[0]->type,typeFunction);
+                    //translate(globsym[$2].op[0]);
 
                     /*freeNode($1);*/
                     symtab =symboltable;
@@ -109,6 +111,7 @@ command:
 		
 function:
           function komanda       { /*printf("in here");*/ $$ = fct($1,$2); }
+          | function decl  { /*printf("in here");*/ $$ = fct($1,NULL); }
         | /* NULL */ {$$=NULL;}
 		| error {/*printf("ERROR!!!");*/}
         ;
@@ -139,7 +142,7 @@ komanda:
                                                    /*printf("we are here");*/ $$ = opr(PRINT, 1, $2);
 
                                                     }
-        | decl NEWLINE                              {$$ = $1;}
+        //| decl NEWLINE                              {$$ = $1;}
 		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
 		//| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
         | VARIABLE '=' expr NEWLINE  {
@@ -179,7 +182,7 @@ expr:
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
         | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
-        | expr '*' expr         { $$ = opr('*', 2, $1, $3); }
+        | expr '*' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('*',getType($1), 2, $1, $3);  }
         | expr '/' expr         { $$ = opr('/', 2, $1, $3); }
         | expr '<' expr         { $$ = opr('<', 2, $1, $3); }
         | expr '>' expr         { $$ = opr('>', 2, $1, $3); }
@@ -320,9 +323,7 @@ int main(void) {
         fprintf(fl,"print this to file");
         printf("printing successful\n");
     }
-
-
+    fclose(fl);
     yyparse();
-
     return 0;
 }

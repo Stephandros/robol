@@ -2,21 +2,23 @@ procedura prx
 pocetok
 broj x
 x=10
-x=x-5
+x=x-7
 print(x)
 kraj
 
 broj x
 x=20
-
-ako (x<5)
+povtoruvaj 5 pati
+!
+ako (x<10)
 !
 print(x)
 !
 inaku
 !
-x=x-10
+x=x-5
 print(x)
+!
 !
 povikaj prx
 print(x)
@@ -37,3 +39,35 @@ x=x+1
 !
 SvrtiDesno
 SvrtiLevo
+
+-------------------
+
+procedura proc1
+pocetok
+broj x
+broj y
+povtoruvaj 5 pati
+!
+x=10
+x=x+(2*3)
+x=x+7
+y=20broj
+y=x+y
+!
+print(x)
+print(y)
+kraj
+
+povikaj proc1
+
+
+
+-------
+
+broj x
+x=5
+povtoruvaj do (x<=10)
+!
+x=x+1
+print(x)
+!

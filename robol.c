@@ -111,6 +111,19 @@ int translate(nodeType *p){
 			if(gn==1) printf("move mx %d\n",p->con.value);
 			gn++; gn=gn%2;
 			return 0;
+
+		case typeFunction:
+			//printf("inhere\n");
+			translate(p->opr.op[0]);
+			translate(p->opr.op[1]);
+			return 1;
+
+		case typeId:
+			if(gn==0) printf("move nx %s\n",symtab[p->id.i].name);
+			if(gn==1) printf("move mx %s\n",symtab[p->id.i].name);
+			gn++; gn=gn%2;
+			return 0;
+
 		case typeOpr:
 			switch(p->opr.oper) {
 				case '=':
@@ -132,30 +145,41 @@ int translate(nodeType *p){
 						b=translate(p->opr.op[1]);
 						a=translate(p->opr.op[0]);
 					}
-					else {
+					else if(a==typeId&&b==typeOpr){
+
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+
+					}
+
+					else{
 						a=translate(p->opr.op[0]);
 						b=translate(p->opr.op[1]);
 					}
 
 					if(a==0&&b==0){
 						printf("mul nx mx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					} else if(a==0){
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("mul mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					}
 					else if (b==0){
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("mul mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					} else {
 						printf("pop\n");
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("mul mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 
 					}
@@ -163,32 +187,148 @@ int translate(nodeType *p){
 					return 1;
 
 				case '+':
-					a = translate(p->opr.op[0]);
-					b = translate(p->opr.op[1]);
+					a=p->opr.op[0]->type;
+					b=p->opr.op[1]->type;
+					if(a==typeCon&&b==typeOpr) {
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+					}
+					else if(a==typeId&&b==typeOpr){
+
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+					}
+					else{
+						a=translate(p->opr.op[0]);
+						b=translate(p->opr.op[1]);
+					}
+
 					if(a==0&&b==0){
 						printf("add nx mx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					} else if(a==0){
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("add mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					}
 					else if (b==0){
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("add mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					} else {
 						printf("pop\n");
 						printf("move mx nx\n");
 						printf("pop\n");
 						printf("add mx nx\n");
+						printf("move fx nx\n");
 						printf("push\n");
 					}
 					gn=0; return 1;
 
 
+
+				case '-':
+					a=p->opr.op[0]->type;
+					b=p->opr.op[1]->type;
+
+					if(a==typeCon&&b==typeOpr) {
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+					}
+					else if(a==typeId&&b==typeOpr){
+
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+
+					}
+
+					else{
+						a=translate(p->opr.op[0]);
+						b=translate(p->opr.op[1]);
+					}
+
+					if(a==0&&b==0){
+						printf("sub nx mx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					} else if(a==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("sub mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					}
+					else if (b==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("sub mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					} else {
+						printf("pop\n");
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("sub mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+
+					}
+					gn=0;
+					return 1;
+
+				case '/':
+					a=p->opr.op[0]->type;
+					b=p->opr.op[1]->type;
+
+					if(a==typeCon&&b==typeOpr) {
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+					}
+					else if(a==typeId&&b==typeOpr){
+
+						b=translate(p->opr.op[1]);
+						a=translate(p->opr.op[0]);
+
+					}
+
+					else{
+						a=translate(p->opr.op[0]);
+						b=translate(p->opr.op[1]);
+					}
+
+					if(a==0&&b==0){
+						printf("div nx mx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					} else if(a==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("div mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					}
+					else if (b==0){
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("div mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+					} else {
+						printf("pop\n");
+						printf("move mx nx\n");
+						printf("pop\n");
+						printf("div mx nx\n");
+						printf("move fx nx\n");
+						printf("push\n");
+
+					}
+					gn=0;
+					return 1;
 
 				case ';':
 				{
@@ -196,7 +336,7 @@ int translate(nodeType *p){
 					return translate(p->opr.op[1]);
 				}
 
-				case typeFunction: translate(p->opr.op[0]); translate(p->opr.op[1]); return 1;
+
 
 				case EQ:
 				case NE:
@@ -255,6 +395,26 @@ int translate(nodeType *p){
 					gn = 0;
 					return 1;
 				}
+				case POVTORUVAJ :
+				{
+					translate(p->opr.op[0]);
+
+					switch ((p->opr.op[0])->opr.oper)
+					{
+						case EQ:  { printf("JNE endwhile\n"); break; }
+						case NE:  { printf("JIE endwhile\n"); break; }
+						case '>': { printf("JL endwhile\n"); break; }
+						case GE:  { printf("JLE endwhile\n"); break; }
+						case '<': { printf("JM endwhile\n"); break; }
+						case LE:  { printf("JME endwhile\n"); break; }
+					}
+					printf("while:\n");
+					translate(p->opr.op[1]);
+					printf("JMP while\n");
+					printf("endwhile:\n");
+					return 0;
+				}
+
 
 				case POVTORUVAJ_2: // povtoruvaj x pati ! ... !
 				{
