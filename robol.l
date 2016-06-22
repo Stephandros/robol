@@ -17,7 +17,7 @@ void yyerror(char *);
 "procedura"		return PROCEDURA;
 "pocetok"		return POCETOK;
 "kraj"			return KRAJ;
-"povikaj"		return CALL;
+"povikaj"		return POVIKAJ;
 
 "broj"			{yylval.iValue =0; return T_BROJ;}//0 is broj
 "nasoka"		{yylval.iValue =1; return T_NASOKA;} //1 is nasoka

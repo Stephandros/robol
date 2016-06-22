@@ -1,0 +1,39 @@
+procedura prx
+pocetok
+broj x
+x=10
+x=x-5
+print(x)
+kraj
+
+broj x
+x=20
+
+ako (x<5)
+!
+print(x)
+!
+inaku
+!
+x=x-10
+print(x)
+!
+povikaj prx
+print(x)
+
+
+------
+
+broj x
+x=10
+povtoruvaj 5 pati
+!
+Odi
+ako (x>14)
+!
+Zemi
+!
+x=x+1
+!
+SvrtiDesno
+SvrtiLevo

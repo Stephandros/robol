@@ -7,6 +7,7 @@
 #include "y.tab.h"
 
 
+
 /* symbol table */
 /* hash a symbol */
 static unsigned symhash(char *sym)
@@ -70,11 +71,11 @@ int ex(nodeType *p) {
 		return 0;
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
 		case NEWLINE:       ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case ODI: printf("odam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case ZEMI: printf("zemam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case OSTAVI: printf("ostavam\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case SVRTIDESNO: printf("vrtam desno\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
-		case SVRTILEVO: printf("vrtam levo\n"); ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case ODI: /*printf("odam\n");*/ ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case ZEMI: /*prntf("zemam\n");*/ ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case OSTAVI: /*printf("ostavam\n");*/ ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case SVRTIDESNO: /*printf("vrtam desno\n");*/ ex(p->opr.op[0]); return ex(p->opr.op[1]);
+		case SVRTILEVO: /*printf("vrtam levo\n");*/ ex(p->opr.op[0]); return ex(p->opr.op[1]);
         case '=':       return (symtab[p->opr.op[0]->id.i].value) = ex(p->opr.op[1]);
         case UMINUS:    return -ex(p->opr.op[0]);
         case '+':       return ex(p->opr.op[0]) + ex(p->opr.op[1]);
@@ -112,6 +113,17 @@ int translate(nodeType *p){
 			return 0;
 		case typeOpr:
 			switch(p->opr.oper) {
+				case '=':
+					if(p->opr.op[1]->type==typeCon){
+						a=ex(p->opr.op[1]);
+						printf("move %s %d\n", symtab[p->opr.op[0]->id.i].name,a);
+					}
+					else {
+						translate((p->opr.op[1]));
+						printf("pop\n");
+						printf("move %s nx\n", symtab[p->opr.op[0]->id.i].name);
+					}
+					return 1;
 				case '*':
 					a=p->opr.op[0]->type;
 					b=p->opr.op[1]->type;
@@ -183,6 +195,8 @@ int translate(nodeType *p){
 					translate(p->opr.op[0]);
 					return translate(p->opr.op[1]);
 				}
+
+				case typeFunction: translate(p->opr.op[0]); translate(p->opr.op[1]); return 1;
 
 				case EQ:
 				case NE:
@@ -257,6 +271,13 @@ int translate(nodeType *p){
 					gn = 0;
 					return 1;
 				}
+
+				case ODI: printf("GO\n"); return 1;
+				case ZEMI: printf("TK\n"); return 1;
+				case OSTAVI: printf("LV\n"); return 1;
+				case SVRTIDESNO: printf("RR\n"); return 1;
+				case SVRTILEVO: printf("RL\n"); return 1;
+
 			}
 	}
 	return 0;

@@ -14,13 +14,14 @@ void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
 
-
 nodeType *fct(nodeType *l,nodeType *r);
 
 void yyerror(char *s);
 //struct symbol symtab[NHASH];
 struct symbol *symtab;
 struct symbol *globsym;
+
+
 
 //int symtab[NHASH];                    /* symbol table */
 %}
@@ -36,8 +37,8 @@ struct symbol *globsym;
 %token <iValue> INTEGER NASOKA
 %token <iValue> VARIABLE
 %token WHILE IF PRINT
-%token NEWLINE POVTORUVAJ DO PATI PROCEDURA POCETOK KRAJ T_BROJ T_NASOKA CALL SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI
-%token POVTORUVAJ_2
+%token NEWLINE POVTORUVAJ DO PATI POCETOK KRAJ T_BROJ T_NASOKA POVIKAJ SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI
+%token POVTORUVAJ_2 PROCEDURA
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -61,6 +62,7 @@ program:
 		}*/
 		
 		  eden {/**/}
+		  | error {printf("ERROR!!!");}
         ;
 		
 		
@@ -70,7 +72,7 @@ eden:
 	;
 
 poc:
-    POCETOK VARIABLE {
+    PROCEDURA VARIABLE NEWLINE {
         symtab[$2].declared= 1;
         globsym=symtab;
         $$=$2;
@@ -80,34 +82,37 @@ poc:
     ;
 		
 nesto:
-		poc function KRAJ  {
-            /*symtab[$1].op[0]= $2;*/
-            globsym[$1].op[0]=$2;
+		poc POCETOK NEWLINE function KRAJ  {
+            /*symtab[$1].op[0]= $4;*/
+            globsym[$1].op[0]=$4;
             symtab =symboltable;
 		    }
-		| function2
-		| CALL VARIABLE {
-            if(symtab[$2].declared==0)
-                yyerror("not declared");
-            globsym = symtab;
-            symtab = globsym[$2].symboltable;
-            ex(globsym[$2].op[0]);
-            translate(globsym[$2].op[0]);
-            /*freeNode($1);*/
-            symtab =symboltable;
-            }
+		 | command
+
 		;
+
+command:
+        komanda { ex($1); translate($1);  freeNode($1); }
+        | POVIKAJ VARIABLE {
+                 if(symtab[$2].declared==0)
+                        yyerror("not declared");
+                    globsym = symtab;
+                    symtab = globsym[$2].symboltable;
+                    ex(globsym[$2].op[0]);
+
+                    translate(globsym[$2].op[0]);
+
+                    /*freeNode($1);*/
+                    symtab =symboltable;
+         }
 
 		
 function:
           function komanda       { /*printf("in here");*/ $$ = fct($1,$2); }
         | /* NULL */ {$$=NULL;}
-		| error {printf("ERROR!!!");}
+		| error {/*printf("ERROR!!!");*/}
         ;
-		
-function2:
-		komanda { ex($1); translate($1); freeNode($1); }
-		;
+
 
 
 decl:
@@ -115,8 +120,8 @@ decl:
      | T_NASOKA varlist {$$=$2;}
     ;
 varlist:
-    VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0; $$ = id($1,$<iValue>0); }
-    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; $$ = opr(';',2,$1, id($3,$<iValue>0)); }
+    VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0; printf("data %s\n",symtab[$1].name);$$ = id($1,$<iValue>0); }
+    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; printf("data %s\n",symtab[$3].name); $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
 	
 osnovna_komanda:
@@ -130,18 +135,25 @@ komanda:
 		  NEWLINE                            { $$ = opr(NEWLINE, 2, NULL, NULL); }
 		| osnovna_komanda NEWLINE		  	 { $$ = $1;  }
         | expr NEWLINE                       { $$ = $1; }
-        | PRINT expr NEWLINE                 { $$ = opr(PRINT, 1, $2); }
+        | PRINT expr NEWLINE                 { /*if($2==NULL) {yyerror("not declared"); $$=NULL;}*/
+                                                   /*printf("we are here");*/ $$ = opr(PRINT, 1, $2);
+
+                                                    }
         | decl NEWLINE                              {$$ = $1;}
 		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
 		//| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
         | VARIABLE '=' expr NEWLINE  {
-            if(symtab[$1].declared==0)
+            if(symtab[$1].declared==0){
                 yyerror("not declared");
-            if(symtab[$1].tip!=getType($3)){
+                $$ = NULL;
+                }
+            else if(symtab[$1].tip!=getType($3)){
                 printf("type is %d %d\n",getType($3),symtab[$1].tip);
                 yyerror("type mismatch");
+                $$ = NULL;
                 }
-            $$ = opr('=', 2, id($1,symtab[$1].tip), $3); }
+                else{
+            $$ = opr('=', 2, id($1,symtab[$1].tip), $3); }}
 		| VARIABLE '=' NASOKA NEWLINE {
             if(symtab[$1].declared==0)
                 yyerror("not declared");
@@ -151,8 +163,8 @@ komanda:
             }
 		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ, 2, $4, $9); }
 		| POVTORUVAJ INTEGER PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, con($2,0), $7); }
-        | IF '(' expr ')' '!' komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $6); }
-        | IF '(' expr ')' '!' komanda_list '!' ELSE '!' komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $6, $10); }
+        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $8); }
+        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $8, $15); }
         ;
 
 komanda_list:
@@ -163,7 +175,7 @@ komanda_list:
 
 expr:
           INTEGER               { $$ = con($1,0); }
-        | VARIABLE              { if(symtab[$1].declared==0) yyerror("not declared"); $$ = id($1,symtab[$1].tip); }
+        | VARIABLE              { if(symtab[$1].declared==0) yyerror("not declared");/*printf("here in var");*/ $$ = id($1,symtab[$1].tip); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
         | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
@@ -297,6 +309,20 @@ void yyerror(char *s) {
 
 int main(void) {
     symtab = symboltable;
+
+    FILE *fl;
+    fl = fopen("output.txt","w+");
+
+    if(fl==NULL){
+        printf("cannot open file\n");
+    }
+    else {
+        fprintf(fl,"print this to file");
+        printf("printing successful\n");
+    }
+
+
     yyparse();
+
     return 0;
 }
