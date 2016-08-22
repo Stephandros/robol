@@ -13,6 +13,7 @@ nodeEnum getType(nodeType *p);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
+FILE *fl, *fp;
 
 nodeType *fct(nodeType *l,nodeType *r);
 
@@ -62,7 +63,10 @@ program:
 		}*/
 		
 		  eden {/**/}
-		  | error {printf("ERROR!!!");}
+		  | error {printf("ERROR!!!");
+		  fprintf(fl,"ERROR!!!");
+		  fflush(fl);
+		  }
         ;
 		
 		
@@ -307,23 +311,41 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(char *s) {
-    fprintf(stdout, "%s\n", s);
+    printf("%s\n", s);
+    fprintf(fl, "%s\n", s);
+    fflush(fl);
 }
 
 int main(void) {
     symtab = symboltable;
+    extern FILE* yyin;
 
-    FILE *fl;
     fl = fopen("output.txt","w+");
+    fp = fopen("input.txt","r");
+    char buff[255];
+
+    if(fp==NULL){
+            printf("cannot open file for reading\n");
+        }
+        else {
+    fscanf(fp, "%s", buff);
+    printf("1 : %s\n", buff );
+    }
 
     if(fl==NULL){
         printf("cannot open file\n");
     }
     else {
         fprintf(fl,"print this to file");
+        fprintf(fl,"print this to file");
+        fprintf(fl,"print this to file");
         printf("printing successful\n");
     }
-    fclose(fl);
+    fflush(fl);
+    //yyin=fp;
     yyparse();
+     printf("printing successful afteryyparse finishes\n");
+    fclose(fl);
+    fclose(fp);
     return 0;
 }
