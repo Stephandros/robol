@@ -7,9 +7,30 @@ void yyerror(char *);
 
 %%
 
+"-" |
+"+" |
+"." |
+"(" |
+")" |
+"<" |
+">" |
+"=" |
+"*" |
+"/" |
+"'" |
+":" |
+"{" |
+"}" |
+"," |
+"!" {
+       /*printf(yytext);*/
+       return *yytext;
+    }
+
+"end"           return END;
 "while"         return WHILE;
-"ako"            return IF;
-"inaku"          return ELSE;
+"ako"           return IF;
+"inaku"         return ELSE;
 "print"         return PRINT;
 "povtoruvaj"	return POVTORUVAJ;
 "do"			return DO;
@@ -19,44 +40,40 @@ void yyerror(char *);
 "kraj"			return KRAJ;
 "povikaj"		return POVIKAJ;
 
-"broj"			{yylval.iValue =0; return T_BROJ;}//0 is broj
+"broj"			{yylval.iValue =0; return T_BROJ;} //0 is broj
 "nasoka"		{yylval.iValue =1; return T_NASOKA;} //1 is nasoka
+
 I			{yylval.iValue =0; return NASOKA;}
 Z			{yylval.iValue =1; return NASOKA;}
 S			{yylval.iValue =2; return NASOKA;}
 J			{yylval.iValue =3; return NASOKA;}
 
-"SvrtiLevo" return SVRTILEVO;
+"SvrtiLevo"  return SVRTILEVO;
 "SvrtiDesno" return SVRTIDESNO;
-"Odi" return ODI;
-"Zemi" return ZEMI;
-"Ostavi"   return OSTAVI;
+"Odi"        return ODI;
+"Zemi"       return ZEMI;
+"Ostavi"     return OSTAVI;
 
 
 
-[a-zA-z][a-zA-Z0-9]*       { 
-				yylval.iValue = lookup(yytext);
-                //yylval.sIndex = *yytext - 'a';
-                return VARIABLE;
-            }
+[a-zA-z][a-zA-Z0-9]*   {
+			           yylval.iValue = lookup(yytext);
+                       //yylval.sIndex = *yytext - 'a';
+                       /*printf(yytext);
+                       printf("\n");*/
+                       return VARIABLE;
+                       }
 
-0           {
-                yylval.iValue = atoi(yytext);
-                return INTEGER;
-            }
+0   {  yylval.iValue = atoi(yytext);
+       return INTEGER;
+    }
 
 [1-9][0-9]* {
                 yylval.iValue = atoi(yytext);
                 return INTEGER;
             }
 
-[-()<>=+*/;:{}.,] {
-                return *yytext;
-             }
-			 
-[!]	{
-	return *yytext;
-}
+
 
 [\n]+			return NEWLINE;	
 
@@ -68,8 +85,10 @@ J			{yylval.iValue =3; return NASOKA;}
 
 [ \t]+        ;       /* ignore whitespace */
 
-.               yyerror("Unknown character");
+.              yyerror("Unknown character");
+
 %%
+
 int yywrap(void) {
     return 1;
 }

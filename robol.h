@@ -2,13 +2,21 @@
 
 typedef enum { typeCon, typeId, typeOpr, typeFunction } nodeEnum;
 
+/* identifiers */
+typedef struct {
+	int i;                      /* subscript to sym array */
+	int s_type;
+} idNodeType;
+
 struct symbol {
 	char *name;
 	int value;
-	int tip;
+	int tip; //type 0 is number, type 1 is direction, type 3 is function
 	int declared;
 	struct nodeTypeTag *op[1];
 	struct symbol *symboltable;
+	int paramlist[5];
+	int noParams;
 };
 
 struct function {
@@ -22,11 +30,6 @@ typedef struct {
 	int s_type;					//type 0 is number, type 1 is direction
 } conNodeType;
 
-/* identifiers */
-typedef struct {
-	int i;                      /* subscript to sym array */
-	int s_type;
-} idNodeType;
 
 /* operators */
 typedef struct {

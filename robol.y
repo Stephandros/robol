@@ -13,18 +13,30 @@ nodeEnum getType(nodeType *p);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
-FILE *fl, *fp;
 
+/* stack functions */
+int isempty();
+int isfull();
+int peek();
+int pop();
+int push(int data);
+void emptyStack();
+
+int popValue;
+int popTip;
+int count;
+
+FILE *flin;
+extern FILE *flout, *flrimal, *flerror, *flcommands;
 nodeType *fct(nodeType *l,nodeType *r);
 
+char *error_string;
 void yyerror(char *s);
 //struct symbol symtab[NHASH];
 struct symbol *symtab;
 struct symbol *globsym;
-
-
-
 //int symtab[NHASH];                    /* symbol table */
+
 %}
 
 %union {
@@ -38,7 +50,7 @@ struct symbol *globsym;
 %token <iValue> INTEGER NASOKA
 %token <iValue> VARIABLE
 %token WHILE IF PRINT
-%token NEWLINE POVTORUVAJ DO PATI POCETOK KRAJ T_BROJ T_NASOKA POVIKAJ SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI
+%token NEWLINE POVTORUVAJ DO PATI POCETOK KRAJ T_BROJ T_NASOKA POVIKAJ SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI END
 %token POVTORUVAJ_2 PROCEDURA
 %nonassoc IFX
 %nonassoc ELSE
@@ -50,10 +62,10 @@ struct symbol *globsym;
 
 //%type <nPtr> stmt stmt_list
 %type <nPtr> komanda komanda_list expr
-%type <nPtr> function osnovna_komanda
+%type <nPtr> function osnovna_komanda paramlist
 
-%type <nPtr> decl varlist
-%type <iValue> poc
+%type <nPtr> decl varlist declVar listOfVarables
+%type <iValue> poc tip
 
 
 %%
@@ -61,48 +73,101 @@ struct symbol *globsym;
 program:
         /*PROCEDURA '('')' NEWLINE POCETOK NEWLINE function KRAJ             { //exit(0); 
 		}*/
-		
-		  eden {/**/}
-		  | error {printf("ERROR!!!");
-		  fprintf(fl,"ERROR!!!");
-		  fflush(fl);
-		  }
+		eden END { return 0;};
+        /*| error {printf("ERROR!!!");
+		fprintf(flout,"ERROR!!!");
+		fflush(flout);
+		}*/
         ;
 		
 		
 eden: 
 	eden nesto
 	|
+	| error NEWLINE {printf("ERROR!!!");}
 	;
 
+
+// a command or a procedure definition
+nesto:
+		poc listaNaParametri  POCETOK NEWLINE function KRAJ  {
+
+            /*symtab[$1].op[0]= $5;*/
+            globsym[$1].op[0]=$5;
+            translate($5);
+            symtab =symboltable;
+		    }
+		 | command
+		;
+listaNaParametri:
+    '(' paramlist ')' {
+                    fprintf(flout,"this is the list of procedure with name %s\n",globsym[$<iValue>0].name);
+                    count=0;
+
+                    while(!isempty()){
+                     popValue=pop();
+                     popTip = pop();
+                     symtab[popValue].declared = 1;
+                     symtab[popValue].tip=popTip;
+                     globsym[$<iValue>0].paramlist[count] = popValue;
+                     count++;
+                     }
+                     globsym[$<iValue>0].noParams = count;
+
+    }
+    ;
+
 poc:
-    PROCEDURA VARIABLE NEWLINE {
+    PROCEDURA VARIABLE {
         symtab[$2].declared= 1;
         globsym=symtab;
         $$=$2;
         globsym[$2].symboltable = malloc(NHASH*sizeof(struct symbol));
         symtab = globsym[$2].symboltable;
-        }
+        $$ = $2;
+    }
     ;
-		
-nesto:
-		poc POCETOK NEWLINE function KRAJ  {
-            /*symtab[$1].op[0]= $4;*/
-            globsym[$1].op[0]=$4;
-            translate($4);
-            symtab =symboltable;
-		    }
-		 | command
 
-		;
+paramlist:
+    tip VARIABLE { push($1); push($2); $$ = id($2,$<iValue>1);}
+    | tip VARIABLE ',' paramlist {  push($1); push($2); $$ = opr(';',2,$2, id($2,$<iValue>1)); }
+    ;
+
+tip:
+    T_BROJ {$$=$<iValue>1;}
+    | T_NASOKA {$$ = $<iValue>1;}
+    ;
+
+valueList:
+    NASOKA {push($1);}
+    |
+    INTEGER {push($1);}
+    |
+    valueList ',' NASOKA {push($3);}
+    |
+    valueList ',' INTEGER {push($3);}
+    ;
 
 command:
-        komanda { ex($1); translate($1);  freeNode($1); }
+        komanda {  ex($1); translate($1); freeNode($1); }
         |decl { ex($1); freeNode($1); }
-        | POVIKAJ VARIABLE {
-                 if(symtab[$2].declared==0)
-                        yyerror("not declared");
+        | declVar { ex($1); freeNode($1); }
+        | POVIKAJ VARIABLE valueList{
+                 if(symtab[$2].declared==0) yyerror("not declared");
+                 else {
                     globsym = symtab;
+                    /*fprintf(flout,"function with name: %s has %d arguments with names: ",globsym[$2].name,globsym[$2].noParams);*/
+                    count=globsym[$2].noParams-1;
+                    while(count>=0){
+                        fprintf(flout,"%s ",globsym[$2].symboltable[globsym[$2].paramlist[count]].name);
+                        popValue=pop();
+                        /*fprintf(flout,"pop val %d\n",popValue);
+                        fprintf(flout,"goes to %s\n",globsym[$2].symboltable[globsym[$2].paramlist[count]].name);*/
+                        globsym[$2].symboltable[globsym[$2].paramlist[count]].value = popValue;
+                        count--;
+                    }
+
+                    fprintf(flout,"\n");
                     symtab = globsym[$2].symboltable;
                     ex(globsym[$2].op[0]);
                     //printf("%d, %d\n",globsym[$2].op[0]->type,typeFunction);
@@ -110,12 +175,36 @@ command:
 
                     /*freeNode($1);*/
                     symtab =symboltable;
+                    }
          }
+         ;
+declVar:
+    listOfVarables ':' T_BROJ {
+       while(!isempty()){
+            popValue = pop();
+            /*fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);*/
+            symtab[popValue].tip=$<iValue>3;
+       }
+       $$=$1;
+     }
+    | listOfVarables ':' T_NASOKA {
+        while(!isempty()){
+            popValue = pop();
+            fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);
+            symtab[popValue].tip=$<iValue>3;
+       }
+    $$=$1;
+    }
+    ;
+listOfVarables:
+     VARIABLE { symtab[$1].declared = 1; push($1); $$ = id($1,$<iValue>0); }
+     | listOfVarables ',' VARIABLE { symtab[$3].declared = 1; push($3); $$ = opr(';',2,$1, id($3,$<iValue>0)); }
+     ;
 
 		
 function:
-          function komanda       { /*printf("in here");*/ $$ = fct($1,$2); }
-          | function decl  { /*printf("in here");*/ $$ = fct($1,NULL); }
+          function komanda       {  $$ = fct($1,$2); }
+          | function decl  {  $$ = fct($1,NULL); }
         | /* NULL */ {$$=NULL;}
 		| error {/*printf("ERROR!!!");*/}
         ;
@@ -127,8 +216,16 @@ decl:
      | T_NASOKA varlist {$$=$2;}
     ;
 varlist:
-    VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0; printf("data %s\n",symtab[$1].name);$$ = id($1,$<iValue>0); }
-    | varlist ',' VARIABLE { symtab[$3].declared = 1; symtab[$3].tip=$<iValue>0; printf("data %s\n",symtab[$3].name); $$ = opr(';',2,$1, id($3,$<iValue>0)); }
+    VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0;
+    /*fprintf(flout,"data %s\n",symtab[$1].name);
+    fflush(flout);*/
+    $$ = id($1,$<iValue>0);
+    }
+    | varlist ',' VARIABLE {
+    symtab[$3].declared = 1;
+    symtab[$3].tip=$<iValue>0;
+    /*printf("data %s\n",symtab[$3].name);*/
+    $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
 	
 osnovna_komanda:
@@ -142,9 +239,10 @@ komanda:
 		  NEWLINE                            { $$ = opr(NEWLINE, 2, NULL, NULL); }
 		| osnovna_komanda NEWLINE		  	 { $$ = $1;  }
         | expr NEWLINE                       { $$ = $1; }
-        | PRINT expr NEWLINE                 { /*if($2==NULL) {yyerror("not declared"); $$=NULL;}*/
-                                                   /*printf("we are here");*/ $$ = opr(PRINT, 1, $2);
-
+        | PRINT expr NEWLINE                 { printf(" here in print %d",$2);
+                                                if($2==NULL) { $$=NULL;}
+                                               else {
+                                               $$ = opr(PRINT, 1, $2); }
                                                     }
         //| decl NEWLINE                              {$$ = $1;}
 		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
@@ -164,8 +262,10 @@ komanda:
 		| VARIABLE '=' NASOKA NEWLINE {
             if(symtab[$1].declared==0)
                 yyerror("not declared");
+                else
             if(symtab[$1].tip==0)
                 yyerror("not a nasoka");
+                else
             $$ = opr('=', 2, id($1,symtab[$1].tip), con($3,1));
             }
 		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ, 2, $4, $9); }
@@ -173,6 +273,8 @@ komanda:
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $8); }
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $8, $15); }
         ;
+
+
 
 komanda_list:
           komanda                  { $$ = $1;  }
@@ -182,7 +284,7 @@ komanda_list:
 
 expr:
           INTEGER               { $$ = con($1,0); }
-        | VARIABLE              { if(symtab[$1].declared==0) yyerror("not declared");/*printf("here in var");*/ $$ = id($1,symtab[$1].tip); }
+        | VARIABLE              { if(symtab[$1].declared==0) {  sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string); $$ = NULL; } else $$ = id($1,symtab[$1].tip); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
         | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
@@ -311,41 +413,39 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(char *s) {
-    printf("%s\n", s);
-    fprintf(fl, "%s\n", s);
-    fflush(fl);
+    fprintf(flerror, "%s\n", s);
 }
 
 int main(void) {
-    symtab = symboltable;
-    extern FILE* yyin;
 
-    fl = fopen("output.txt","w+");
-    fp = fopen("input.txt","r");
+    symtab = symboltable;
+    error_string = (char*)malloc(50 * sizeof(char));
+    extern FILE* yyin;
+    flout = fopen("printingOutput.txt","w+");
+    flin = fopen("input.txt","r");
+    flrimal = fopen("rimalOutput.txt","w+");
+    flerror = fopen("errorOutput.txt","w+");
+    flcommands = fopen("commandsOutput.txt","w+");
     char buff[255];
 
-    if(fp==NULL){
-            printf("cannot open file for reading\n");
-        }
-        else {
-    fscanf(fp, "%s", buff);
-    printf("1 : %s\n", buff );
-    }
+    yyin=flin;
 
-    if(fl==NULL){
-        printf("cannot open file\n");
-    }
-    else {
-        fprintf(fl,"print this to file");
-        fprintf(fl,"print this to file");
-        fprintf(fl,"print this to file");
-        printf("printing successful\n");
-    }
-    fflush(fl);
-    //yyin=fp;
     yyparse();
-     printf("printing successful afteryyparse finishes\n");
-    fclose(fl);
-    fclose(fp);
+
+    fprintf(flout,"End of program!");
+    fflush(flout);
+    fflush(flin);
+    fflush(flrimal);
+    fflush(flerror);
+    fflush(flcommands);
+
+    fclose(flout);
+    fclose(flin);
+    fclose(flrimal);
+    fclose(flerror);
+    fclose(flcommands);
+
     return 0;
+
+
 }
