@@ -5,7 +5,7 @@ typedef enum { typeCon, typeId, typeOpr, typeFunction } nodeEnum;
 /* identifiers */
 typedef struct {
 	int i;                      /* subscript to sym array */
-	int s_type;
+	int s_type;   //type 2 is function
 } idNodeType;
 
 struct symbol {
@@ -54,4 +54,7 @@ typedef struct nodeTypeTag {
 #define NHASH 9997
 struct symbol symboltable[NHASH];
 extern struct symbol *symtab;
+extern struct symbol *globsym;
+extern int popValue;
+extern int count;
 //extern int symtab[NHASH];

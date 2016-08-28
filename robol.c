@@ -51,6 +51,7 @@ int lookup(char *sym) {
 }
 
 int counter;
+int tempList[8];
 
 int ex(nodeType *p) {
     if (!p) return 0;
@@ -58,13 +59,36 @@ int ex(nodeType *p) {
         case typeCon:
             return p->con.value;
         case typeId:
-            return symtab[p->id.i].value;
+            switch (p->id.s_type){
+            case 2:
+            //fprintf(flerror, "Inside typeID for function!!!!!!!!\n");
+            globsym = symtab;
+            count=globsym[p->id.i].noParams-1;
+            while(count>=0){
+                //fprintf(flout,"%s ",globsym[p->id.i].symboltable[globsym[p->id.i].paramlist[count]].name);
+                popValue=pop();
+                tempList[count]=popValue;
+                globsym[p->id.i].symboltable[globsym[p->id.i].paramlist[count]].value = popValue;
+                count--;
+            }
+            symtab = globsym[p->id.i].symboltable;
+            ex(globsym[p->id.i].op[0]);
+            count=0;
+            while(count<globsym[p->id.i].noParams){
+              popValue = tempList[count];
+              push(popValue);
+              count++;
+            }
+            symtab =symboltable;
+            }
+            default:  return symtab[p->id.i].value;
         case typeFunction:
             ex(p->opr.op[0]);
             ex(p->opr.op[1]);
             return 0;
         case typeOpr:
             switch (p->opr.oper) {
+                int brojac;
                 case WHILE:
                     while (ex(p->opr.op[0])) ex(p->opr.op[1]);
                     return 0;
@@ -72,9 +96,9 @@ int ex(nodeType *p) {
                     while (ex(p->opr.op[0])) ex(p->opr.op[1]);
                     return 0;
                 case POVTORUVAJ_2:
-                    counter = (p->opr.op[0])->con.value;
-                    while (counter > 0) {
-                        counter--;
+                    brojac = (p->opr.op[0])->con.value;
+                    while (brojac > 0) {
+                        brojac--;
                         ex(p->opr.op[1]);
                     }
                     return 0;

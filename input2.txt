@@ -93,3 +93,35 @@ SvrtiLevo
 povikaj odiYpati 5
 SvrtiDesno
 end
+
+
+-----
+
+procedura odiYpati(broj x) pocetok
+povtoruvaj 3 pati
+!
+print(x)
+x=x-2
+!
+kraj
+
+procedura odiZpati(broj x) pocetok
+povtoruvaj 5 pati
+!
+print(x)
+x=x+2
+!
+kraj
+
+povtoruvaj 5 pati
+!
+povikaj odiYpati 2
+!
+
+povtoruvaj 2 pati
+!
+povikaj odiZpati 3
+!
+
+end
+---

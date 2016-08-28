@@ -62,36 +62,30 @@ struct symbol *globsym;
 
 //%type <nPtr> stmt stmt_list
 %type <nPtr> komanda komanda_list expr
-%type <nPtr> function osnovna_komanda paramlist
+%type <nPtr> function osnovna_komanda paramlist /*declarations*/ functionCall
 
-%type <nPtr> decl varlist declVar listOfVarables
+%type <nPtr> /*decl varlist*/ declVar listOfVarables
 %type <iValue> poc tip
 
 
 %%
 
 program:
-        /*PROCEDURA '('')' NEWLINE POCETOK NEWLINE function KRAJ             { //exit(0);
-		}*/
 		eden END { return 0;};
-        /*| error {printf("ERROR!!!");
-		fprintf(flout,"ERROR!!!");
-		fflush(flout);
-		}*/
-        ;
+    ;
 
 
 eden:
 	eden nesto
-	|
+	| /*NULL*/
 	| error NEWLINE {printf("ERROR!!!");}
 	;
 
 
 // a command or a procedure definition
 nesto:
-		poc listaNaParametri  POCETOK NEWLINE function KRAJ  {
-
+    //this is the declaration of a function
+		poc listaNaParametri POCETOK NEWLINE function KRAJ  {
             /*symtab[$1].op[0]= $5;*/
             globsym[$1].op[0]=$5;
             translate($5);
@@ -101,7 +95,7 @@ nesto:
 		;
 listaNaParametri:
     '(' paramlist ')' {
-                    fprintf(flout,"this is the list of procedure with name %s\n",globsym[$<iValue>0].name);
+                    //fprintf(flout,"this is the list of procedure with name %s\n",globsym[$<iValue>0].name);
                     count=0;
 
                     while(!isempty()){
@@ -121,7 +115,6 @@ poc:
     PROCEDURA VARIABLE {
         symtab[$2].declared= 1;
         globsym=symtab;
-        $$=$2;
         globsym[$2].symboltable = malloc(NHASH*sizeof(struct symbol));
         symtab = globsym[$2].symboltable;
         $$ = $2;
@@ -139,97 +132,87 @@ tip:
     ;
 
 valueList:
-    NASOKA {push($1);}
+    NASOKA { push($1);}
     |
-    INTEGER {push($1);}
+    INTEGER { push($1);}
     |
-    valueList ',' NASOKA {push($3);}
+    valueList ',' NASOKA { push($3);}
     |
-    valueList ',' INTEGER {push($3);}
+    valueList ',' INTEGER { push($3);}
     ;
 
 command:
         komanda {  if($1!=NULL){
           ex($1); translate($1); freeNode($1);}
         }
-        |decl { ex($1); freeNode($1); }
-        | declVar { ex($1); freeNode($1); }
-        | POVIKAJ VARIABLE valueList{
-                 if(symtab[$2].declared==0) yyerror("not declared");
-                 else {
-                    globsym = symtab;
-                    /*fprintf(flout,"function with name: %s has %d arguments with names: ",globsym[$2].name,globsym[$2].noParams);*/
-                    count=globsym[$2].noParams-1;
-                    while(count>=0){
-                        fprintf(flout,"%s ",globsym[$2].symboltable[globsym[$2].paramlist[count]].name);
-                        popValue=pop();
-                        /*fprintf(flout,"pop val %d\n",popValue);
-                        fprintf(flout,"goes to %s\n",globsym[$2].symboltable[globsym[$2].paramlist[count]].name);*/
-                        globsym[$2].symboltable[globsym[$2].paramlist[count]].value = popValue;
-                        count--;
-                    }
+;
 
-                    fprintf(flout,"\n");
-                    symtab = globsym[$2].symboltable;
-                    ex(globsym[$2].op[0]);
-                    //printf("%d, %d\n",globsym[$2].op[0]->type,typeFunction);
-                    //translate(globsym[$2].op[0]);
 
-                    /*freeNode($1);*/
-                    symtab =symboltable;
-                    }
-         }
-         ;
+functionCall:
+    POVIKAJ VARIABLE valueList{
+       if(symtab[$2].declared==0) {yyerror("not declared"); $$=NULL;}
+       else {
+          $$ = id($2,2);
+        }
+      }
+    ;
+// declarations:
+//  |  decl { ex($1); freeNode($1); $$=NULL;}
+//  | declVar { ex($1); freeNode($1); $$=NULL;}
+//  ;
 declVar:
     listOfVarables ':' T_BROJ {
        while(!isempty()){
             popValue = pop();
-            /*fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);*/
+            //fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);
             symtab[popValue].tip=$<iValue>3;
+            symtab[popValue].value=0;
        }
        $$=$1;
      }
     | listOfVarables ':' T_NASOKA {
         while(!isempty()){
             popValue = pop();
-            fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);
+            //fprintf(flout,"type of variable %s is %d",symtab[popValue].name,$<iValue>3);
             symtab[popValue].tip=$<iValue>3;
+            symtab[popValue].value=0;
        }
     $$=$1;
     }
     ;
 listOfVarables:
-     VARIABLE { symtab[$1].declared = 1; push($1); $$ = id($1,$<iValue>0); }
-     | listOfVarables ',' VARIABLE { symtab[$3].declared = 1; push($3); $$ = opr(';',2,$1, id($3,$<iValue>0)); }
+     VARIABLE { symtab[$1].declared = 1; push($1); /*$$ = id($1,$<iValue>0);*/ $$=NULL; }
+     | listOfVarables ',' VARIABLE { symtab[$3].declared = 1; push($3); /*$$ = opr(';',2,$1, id($3,$<iValue>0));*/ $$=NULL; }
      ;
 
 
 function:
           function komanda       {  $$ = fct($1,$2); }
-          | function decl  {  $$ = fct($1,NULL); }
+
         | /* NULL */ {$$=NULL;}
 		| error {/*printf("ERROR!!!");*/}
         ;
 
 
-
+/*
 decl:
      T_BROJ varlist {$$=$2;}
      | T_NASOKA varlist {$$=$2;}
-    ;
+    ;*/
+/*
 varlist:
     VARIABLE { symtab[$1].declared = 1; symtab[$1].tip=$<iValue>0;
-    /*fprintf(flout,"data %s\n",symtab[$1].name);
-    fflush(flout);*/
+    fprintf(flout,"data %s\n",symtab[$1].name);
+    fflush(flout);
     $$ = id($1,$<iValue>0);
     }
     | varlist ',' VARIABLE {
     symtab[$3].declared = 1;
     symtab[$3].tip=$<iValue>0;
-    /*printf("data %s\n",symtab[$3].name);*/
+    printf("data %s\n",symtab[$3].name);
     $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
-
+*/
 osnovna_komanda:
         ODI {$$=opr(ODI, 2, NULL, NULL);}
         |ZEMI {$$=opr(ZEMI, 2, NULL, NULL);}
@@ -240,8 +223,8 @@ osnovna_komanda:
 komanda:
 		  NEWLINE                            { $$ = opr(NEWLINE, 2, NULL, NULL); }
 		| osnovna_komanda NEWLINE		  	 { $$ = $1;  }
-        | expr NEWLINE                       { $$ = $1; }
-        | PRINT expr NEWLINE                 { printf(" here in print %d",$2);
+    | expr NEWLINE                       { $$ = $1; }
+    | PRINT expr NEWLINE                 {
                                                 if($2==NULL) { $$=NULL;}
                                                else {
                                                $$ = opr(PRINT, 1, $2); }
@@ -274,13 +257,15 @@ komanda:
 		| POVTORUVAJ INTEGER PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, con($2,0), $7); }
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $8); }
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $8, $15); }
+        | functionCall {$$=$1;}
+        | declVar { $$=NULL;}
         ;
 
 
 
 komanda_list:
           komanda                  { $$ = $1;  }
-        | komanda_list komanda       { $$ = opr(';', 2, $1, $2); }
+        | komanda_list komanda     { $$ = opr(';', 2, $1, $2); }
         ;
 
 
@@ -293,7 +278,6 @@ expr:
         }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         {
-          yyerror("i am here");
           if($1==NULL) yyerror("1 is null");
           if($3==NULL) yyerror("3 is null");
           if($1==NULL || $3==NULL) {
@@ -355,7 +339,7 @@ nodeType *id(int i, int t) {
     /* copy information */
     p->type = typeId;
     p->id.i = i;
-	p->id.s_type = t;
+	  p->id.s_type = t;
 
     return p;
 }
@@ -417,8 +401,6 @@ nodeType *fct(nodeType *l, nodeType *r) {
 
 	return p;
 }
-
-
 
 void freeNode(nodeType *p) {
     int i;
