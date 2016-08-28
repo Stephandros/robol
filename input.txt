@@ -1,18 +1,5 @@
-procedura odiXpati(broj x) pocetok
-povtoruvaj do (x>=0)
-!
-Odi
-x=x-1
-!
-kraj
-
-x,y:broj
-x=3
-
-povikaj odiXpati 3 
-SvrtiLevo
-povikaj odiXpati 5 
-SvrtiDesno
-
-
+a,b:broj
+a=10
+a+d
+print(a)
 end

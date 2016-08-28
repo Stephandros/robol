@@ -75,7 +75,7 @@ J			{yylval.iValue =3; return NASOKA;}
 
 
 
-[\n]+			return NEWLINE;	
+[\n]+			return NEWLINE;
 
 ">="            return GE;
 "<="            return LE;

@@ -1,0 +1,4 @@
+Variable d not declared
+i am here
+3 is null
+Experssion cannot be evaluated.

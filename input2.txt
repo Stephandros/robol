@@ -74,6 +74,22 @@ print(x)
 
 
 
----
+---------------
 
 
+procedura odiYpati(broj x) pocetok
+povtoruvaj do (x>=0)
+!
+Odi
+x=x-1
+!
+kraj
+
+x,y:broj
+x=3
+
+povikaj odiYpati 3
+SvrtiLevo
+povikaj odiYpati 5
+SvrtiDesno
+end

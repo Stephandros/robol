@@ -17,3 +17,9 @@
 * gcc -c y.tab.c lex.yy.c
 * gcc y.tab.o lex.yy.o robol.c -o robol.exe
 
+## LINUX
+
+gcc y.tab.o lex.yy.o robol.c -o robol.out
+to run it ./robol.out
+you can create an alias:
+alias compile='bison -y -d robol.y; flex robol.l; gcc -c y.tab.c lex.yy.c; gcc y.tab.o lex.yy.o robol.c -o robol.out'

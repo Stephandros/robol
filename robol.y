@@ -71,7 +71,7 @@ struct symbol *globsym;
 %%
 
 program:
-        /*PROCEDURA '('')' NEWLINE POCETOK NEWLINE function KRAJ             { //exit(0); 
+        /*PROCEDURA '('')' NEWLINE POCETOK NEWLINE function KRAJ             { //exit(0);
 		}*/
 		eden END { return 0;};
         /*| error {printf("ERROR!!!");
@@ -79,9 +79,9 @@ program:
 		fflush(flout);
 		}*/
         ;
-		
-		
-eden: 
+
+
+eden:
 	eden nesto
 	|
 	| error NEWLINE {printf("ERROR!!!");}
@@ -149,7 +149,9 @@ valueList:
     ;
 
 command:
-        komanda {  ex($1); translate($1); freeNode($1); }
+        komanda {  if($1!=NULL){
+          ex($1); translate($1); freeNode($1);}
+        }
         |decl { ex($1); freeNode($1); }
         | declVar { ex($1); freeNode($1); }
         | POVIKAJ VARIABLE valueList{
@@ -201,7 +203,7 @@ listOfVarables:
      | listOfVarables ',' VARIABLE { symtab[$3].declared = 1; push($3); $$ = opr(';',2,$1, id($3,$<iValue>0)); }
      ;
 
-		
+
 function:
           function komanda       {  $$ = fct($1,$2); }
           | function decl  {  $$ = fct($1,NULL); }
@@ -227,7 +229,7 @@ varlist:
     /*printf("data %s\n",symtab[$3].name);*/
     $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
-	
+
 osnovna_komanda:
         ODI {$$=opr(ODI, 2, NULL, NULL);}
         |ZEMI {$$=opr(ZEMI, 2, NULL, NULL);}
@@ -284,9 +286,26 @@ komanda_list:
 
 expr:
           INTEGER               { $$ = con($1,0); }
-        | VARIABLE              { if(symtab[$1].declared==0) {  sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string); $$ = NULL; } else $$ = id($1,symtab[$1].tip); }
+        | VARIABLE              {
+          if(symtab[$1].declared==0)
+          {  sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string); $$ = NULL; }
+          else $$ = id($1,symtab[$1].tip);
+        }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
-        | expr '+' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('+',getType($1), 2, $1, $3); }
+        | expr '+' expr         {
+          yyerror("i am here");
+          if($1==NULL) yyerror("1 is null");
+          if($3==NULL) yyerror("3 is null");
+          if($1==NULL || $3==NULL) {
+            yyerror("Cannot evaluate expression.");
+            $$=NULL;
+            }
+            else if(getType($1)!=getType($3)) {
+              yyerror("type doesn't match");
+              $$=NULL;
+            }
+            else $$ = oprt('+',getType($1), 2, $1, $3);
+        }
         | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
         | expr '*' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('*',getType($1), 2, $1, $3);  }
         | expr '/' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('/',getType($1), 2, $1, $3);  }
@@ -395,7 +414,7 @@ nodeType *fct(nodeType *l, nodeType *r) {
     p->type = typeFunction;
     p->opr.op[0] = l;
 	p->opr.op[1] = r;
-    
+
 	return p;
 }
 

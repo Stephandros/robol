@@ -47,7 +47,7 @@ typedef struct nodeTypeTag {
         idNodeType id;          /* identifiers */
         oprNodeType opr;        /* operators */
 		struct function fun;
-		
+
     };
 } nodeType;
 

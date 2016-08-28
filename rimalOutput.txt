@@ -1,7 +1,1 @@
-JLE endwhile
-while:
-JMP while
-endwhile:
-move x 3
-RL
-RR
+move a 10

@@ -1,4 +1,2 @@
-this is the list of procedure with name odiXpati
-x 
-x 
+10
 End of program!
