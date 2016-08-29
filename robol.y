@@ -13,6 +13,11 @@ nodeEnum getType(nodeType *p);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
+int env[100][100];
+int rows;
+int cols;
+int i,j;
+int ri,rj,rn;
 
 /* stack functions */
 int isempty();
@@ -27,7 +32,7 @@ int popTip;
 int count;
 
 FILE *flin;
-extern FILE *flout, *flrimal, *flerror, *flcommands;
+extern FILE *flout, *flrimal, *flerror, *flcommands, *flokolina;
 nodeType *fct(nodeType *l,nodeType *r);
 
 char *error_string;
@@ -36,7 +41,7 @@ void yyerror(char *s);
 struct symbol *symtab;
 struct symbol *globsym;
 //int symtab[NHASH];                    /* symbol table */
-
+extern int yylineno;
 %}
 
 %union {
@@ -47,11 +52,11 @@ struct symbol *globsym;
 
 %error-verbose
 
-%token <iValue> INTEGER NASOKA
+%token <iValue> INTEGER NASOKA PRAVEC
 %token <iValue> VARIABLE
 %token WHILE IF PRINT
 %token NEWLINE POVTORUVAJ DO PATI POCETOK KRAJ T_BROJ T_NASOKA POVIKAJ SVRTILEVO SVRTIDESNO ZEMI OSTAVI ODI END
-%token POVTORUVAJ_2 PROCEDURA
+%token POVTORUVAJ_2 PROCEDURA OKOLINA ZETONI DZIDOVI ROBOT
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -71,14 +76,71 @@ struct symbol *globsym;
 %%
 
 program:
-		eden END { return 0;};
+		/*defOkolina NEWLINE END*/ eden END { return 0;};
+    ;
+/*
+defOkolina:
+     okolina NEWLINE dzidovi NEWLINE zetoni NEWLINE robot
+    ;
+okolina:
+OKOLINA '(' INTEGER ',' INTEGER ')' {
+  cols=$3;
+  rows=$5;
+}
     ;
 
+dzidovi:
+    DZIDOVI NEWLINE POCETOK NEWLINE dzidje  KRAJ
+    ;
+dzidje:
+    dzidje dzid NEWLINE
+    | dzid NEWLINE
+    ;
+dzid :
+    PRAVEC INTEGER INTEGER '-' INTEGER  {
+      if($1==0){//istok-zapad
+        i=rows-($2+1);
+        for(j=$3;j<$5;j++){
+          env[i][j]=1;
+        }
+      }
+    else if($1==1){
+      j=$2;
+      for(i=rows-($5);i<rows-($3);i++){
+        env[i][j]=1;
+      }
+    }
 
+
+    }
+    ;
+
+zetoni:
+    ZETONI NEWLINE POCETOK NEWLINE zetonje KRAJ
+    ;
+zetonje:
+    zetonje zeton NEWLINE
+    | zeton NEWLINE
+    ;
+zeton:
+    '(' INTEGER ',' INTEGER ')'{
+     env[rows-($4+1)][$2]=2;
+   }
+    ;
+
+robot:
+    ROBOT NASOKA '(' INTEGER ',' INTEGER ')'
+    {
+      rn=$2;
+      ri=rows-($4+1);
+      rj=$6;
+
+    }
+*/
 eden:
 	eden nesto
 	| /*NULL*/
-	| error NEWLINE {printf("ERROR!!!");}
+	| error NEWLINE { yyerror("ERROR!!!");}
 	;
 
 
@@ -254,7 +316,7 @@ komanda:
             $$ = opr('=', 2, id($1,symtab[$1].tip), con($3,1));
             }
 		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ, 2, $4, $9); }
-		| POVTORUVAJ INTEGER PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, con($2,0), $7); }
+		| POVTORUVAJ expr PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, $2, $7); }
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $8); }
         | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $8, $15); }
         | functionCall {$$=$1;}
@@ -278,8 +340,6 @@ expr:
         }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         {
-          if($1==NULL) yyerror("1 is null");
-          if($3==NULL) yyerror("3 is null");
           if($1==NULL || $3==NULL) {
             yyerror("Cannot evaluate expression.");
             $$=NULL;
@@ -414,7 +474,8 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(char *s) {
-    fprintf(flerror, "%s\n", s);
+    fprintf(flerror, "%s at line %d\n", s,yylineno);
+
 }
 
 int main(void) {
@@ -432,6 +493,13 @@ int main(void) {
     yyin=flin;
 
     yyparse();
+
+
+    for(int i=0;i<rows;i++){
+    for(int j=0;j<cols;j++)
+      fprintf(flout,"%d ",env[i][j]);
+    fprintf(flout,"\n");
+    }
 
     fprintf(flout,"End of program!");
     fflush(flout);

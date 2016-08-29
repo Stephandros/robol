@@ -1,15 +1,10 @@
-move nx a
-move mx 1
-add nx mx
-move fx nx
-push
-pop
-move a nx
-move a 10
-move b 20
-move nx declInVars
-move x 3
-JL endwhile
+move a 4
+move regGX 47
 while:
+cmp regGX 0
+JIE end_while
+move regPX regNX
+decN
+move regNX regPX
 JMP while
-endwhile:
+end_while:

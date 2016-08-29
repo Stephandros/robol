@@ -96,7 +96,7 @@ int ex(nodeType *p) {
                     while (ex(p->opr.op[0])) ex(p->opr.op[1]);
                     return 0;
                 case POVTORUVAJ_2:
-                    brojac = (p->opr.op[0])->con.value;
+                    brojac = ex(p->opr.op[0]);
                     while (brojac > 0) {
                         brojac--;
                         ex(p->opr.op[1]);

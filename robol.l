@@ -3,8 +3,9 @@
 #include "robol.h"
 #include "y.tab.h"
 void yyerror(char *);
+extern *flerror;
 %}
-
+%option yylineno
 %%
 
 "-" |
@@ -27,9 +28,13 @@ void yyerror(char *);
        return *yytext;
     }
 
+"okolina"  return OKOLINA;
+"dzidovi"   return DZIDOVI;
+"zetoni"    return ZETONI;
+"robot"     return ROBOT;
 "end"           return END;
 "while"         return WHILE;
-"ako"           return IF;
+"ako"          return IF;
 "inaku"         return ELSE;
 "print"         return PRINT;
 "povtoruvaj"	return POVTORUVAJ;
@@ -39,14 +44,16 @@ void yyerror(char *);
 "pocetok"		return POCETOK;
 "kraj"			return KRAJ;
 "povikaj"		return POVIKAJ;
-
 "broj"			{yylval.iValue =0; return T_BROJ;} //0 is broj
 "nasoka"		{yylval.iValue =1; return T_NASOKA;} //1 is nasoka
 
-I			{yylval.iValue =0; return NASOKA;}
-Z			{yylval.iValue =1; return NASOKA;}
-S			{yylval.iValue =2; return NASOKA;}
-J			{yylval.iValue =3; return NASOKA;}
+"I"			{yylval.iValue =0; return NASOKA;}
+"Z"			{yylval.iValue =1; return NASOKA;}
+"S"			{yylval.iValue =2; return NASOKA;}
+"J"			{yylval.iValue =3; return NASOKA;}
+
+"IZ"    {yylval.iValue =0; return PRAVEC;}
+"SJ"   { yylval.iValue =1; return PRAVEC;}
 
 "SvrtiLevo"  return SVRTILEVO;
 "SvrtiDesno" return SVRTIDESNO;
@@ -54,9 +61,8 @@ J			{yylval.iValue =3; return NASOKA;}
 "Zemi"       return ZEMI;
 "Ostavi"     return OSTAVI;
 
-
-
 [a-zA-z][a-zA-Z0-9]*   {
+
 			           yylval.iValue = lookup(yytext);
                        //yylval.sIndex = *yytext - 'a';
                        /*printf(yytext);
@@ -75,7 +81,7 @@ J			{yylval.iValue =3; return NASOKA;}
 
 
 
-[\n]+			return NEWLINE;
+[\n]+			{return NEWLINE;}
 
 ">="            return GE;
 "<="            return LE;

@@ -125,3 +125,32 @@ povikaj odiZpati 3
 
 end
 ---
+
+
+
+
+
+
+
+okolina (16,16)
+dzidovi
+pocetok
+IZ 3 5-11
+IZ 6 2-8
+IZ 11 9-12
+SJ 2 8-12
+SJ 6 11-13
+SJ 13 5-9
+kraj
+zetoni
+pocetok
+(6,8)
+(5,4)
+(12,12)
+(2,2)
+(14,4)
+kraj
+robot S (8,8)
+end
+a:broj
+end

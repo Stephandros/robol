@@ -1,21 +1,7 @@
-procedura declInVars(broj x) pocetok
 a:broj
-a=a+1
-print(a)
-kraj
-
-a,b:broj
-a=10
-b=20
-print(a*b)
-povikaj declInVars 5
-print(a)
-x:broj
-x=3
-povtoruvaj do (x>0)
+a=4
+povtoruvaj ((a*16)/(2+a)) pati
 !
-  povikaj declInVars 7
-  x=x-1
+print(a+d)
 !
-print(a)
 end
