@@ -523,6 +523,9 @@ int main(void) {
 #define COIN    2
 #define BARRIER 3
 
+int** ENVIRONMENT;    
+int prev_dim = 0;    
+
 void setup_environment()
 {
     char environment[]     = "Okolina";
@@ -531,9 +534,6 @@ void setup_environment()
     char robot[]           = "Robot";
     char robot_direction[] = "Nasoka Robot";
     char end[]             = "kraj";
-
-    int** ENVIRONMENT;
-    int prev_row_count = 0;    
 
     FILE *fp;
     if((fp = fopen("okolina.env", "r")) == NULL)
@@ -556,11 +556,11 @@ void setup_environment()
             split = strtok(NULL, " ");
             int col_count = atoi(split);                        
 
-            for (i = 0; i < prev_row_count; ++i)
+            for (i = 0; i < prev_dim; ++i)
                 delete [] ENVIRONMENT[i];
             delete [] ENVIRONMENT;
 
-            prev_row_count = row_count;
+            prev_dim = row_count;
 
             // For simplicity our enviroment will have square base.
             ENVIRONMENT = new int*[row_count];
