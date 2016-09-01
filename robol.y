@@ -518,3 +518,123 @@ int main(void) {
 
 
 }
+
+#define ROBOT   1
+#define COIN    2
+#define BARRIER 3
+
+void setup_environment()
+{
+    char environment[]     = "Okolina";
+    char barriers[]        = "Zidovi";
+    char coins[]           = "Zetoni";
+    char robot[]           = "Robot";
+    char robot_direction[] = "Nasoka Robot";
+    char end[]             = "kraj";
+
+    int** ENVIRONMENT;
+    int prev_row_count = 0;    
+
+    FILE *fp;
+    if((fp = fopen("okolina.env", "r")) == NULL)
+    {
+        printf("Can't open file!\n");
+        return;
+    }
+
+    char line[100];    
+    int i, j;
+
+    while(fgets(line, sizeof(line), fp))
+    {
+        if(strncmp(line, environment, 7) == 0)
+        {            
+            fgets(line, sizeof(line), fp);
+            char * split;
+            split = strtok(line, " ");
+            int row_count = atoi(split);
+            split = strtok(NULL, " ");
+            int col_count = atoi(split);                        
+
+            for (i = 0; i < prev_row_count; ++i)
+                delete [] ENVIRONMENT[i];
+            delete [] ENVIRONMENT;
+
+            prev_row_count = row_count;
+
+            // For simplicity our enviroment will have square base.
+            ENVIRONMENT = new int*[row_count];
+            for (i = 0; i < row_count; ++i)
+                ENVIRONMENT[i] = new int[row_count];
+            for (i = 0; i < row_count; ++i)            
+                for (j = 0; j < row_count; ++j)
+                    ENVIRONMENT[i][j] = 0;            
+        }
+        else if(strncmp(line, barriers, 6) == 0)
+        {            
+            fgets(line, sizeof(line), fp);
+            fgets(line, sizeof(line), fp);
+            int count = 0;
+            do
+            {
+                char * split;
+                split = strtok(line, " ");
+                int direction = atoi(split);
+                split = strtok(NULL, " ");
+                int location = atoi(split);
+                split = strtok(NULL, " ");
+                int start = atoi(split);
+                split = strtok(NULL, " ");
+                int end = atoi(split);
+
+                for(i = start; i < end; ++i)
+                {
+                    if(direction == 0)                      // VERTICAL
+                        ENVIRONMENT[i][location] = BARRIER;                        
+                    else if(direction == 1)                 // HORIZONTAL
+                    ENVIRONMENT[location][i] = BARRIER;
+                }
+                
+            } while(strncmp(line, end, 4) != 0);            
+        }
+        else if(strncmp(line, coins, 6) == 0)
+        {
+            Indices coin_positions[100];
+            fgets(line, sizeof(line), fp);
+            fgets(line, sizeof(line), fp);
+            int count = 0;
+            do
+            {
+                char * split;
+                split = strtok(line, " ");
+                i = atoi(split);
+                split = strtok(NULL, " ");
+                j = atoi(split);
+
+                ENVIRONMENT[i][j] = COIN;
+
+                fgets(line, sizeof(line), fp);
+            } while(strncmp(line, end, 4) != 0);            
+        }
+        else if(strncmp(line, robot, 5) == 0)
+        {
+            fgets(line, sizeof(line), fp);
+            char * split;
+            split = strtok(line, " ");
+            i = atoi(split);
+            split = strtok(NULL, " ");
+            j = atoi(split);
+            
+            ENVIRONMENT[i][j] = ROBOT;
+        }
+        /* Do we need this?
+        else if(strncmp(line, robot_direction, 12) == 0)
+        {
+            fgets(line, sizeof(line), fp);
+            int direction = atoi(line);            
+        }
+        */
+    }
+
+    fclose(fp);
+}
