@@ -127,11 +127,6 @@ end
 ---
 
 
-
-
-
-
-
 okolina (16,16)
 dzidovi
 pocetok
@@ -153,4 +148,28 @@ kraj
 robot S (8,8)
 end
 a:broj
+end
+
+
+-------------------------
+
+
+
+povtoruvaj do (a<5)
+!
+a=a+1
+!
+b=10
+ako (c<5)
+!
+c=I
+!
+inaku
+!
+he=Z
+!
+g:broj
+d:nasoka
+d=10
+g=I
 end

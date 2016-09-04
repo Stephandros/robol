@@ -176,39 +176,39 @@ int ex(nodeType *p) {
                 case ODI:
                     if(canMove()){
                     robotMove();
-                    fprintf(flcommands, "GO\n");
+                    fprintf(flcommands, "WALK\n");
                     }
                     else {
-                    fprintf(flcommands, "CANTGO\n");
+                    fprintf(flout, "CANT_WALK\n");
                     }
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case ZEMI:
                     if(ENVIRONMENT[ri][rj]==COIN){
-                    fprintf(flcommands, "TK\n");
+                    fprintf(flcommands, "TAKE\n");
                     nbrCoins++;
                     ENVIRONMENT[ri][rj]=0;
                     }
                     else {
-                      fprintf(flcommands, "CANTTK\n");
+                      fprintf(flout, "CANT_TAKE\n");
                     }
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case OSTAVI:
                     if(nbrCoins>0 && ENVIRONMENT[ri][rj]==0){
-                      fprintf(flcommands, "LV\n");
+                      fprintf(flcommands, "LEAVE\n");
                       nbrCoins--;
                       ENVIRONMENT[ri][rj]=COIN;
                       }
                       /*else if (ENVIRONMENT[ri][rj]==COIN){
                         fprintf(flerror, "LV command ignored. You cannot place a coin on top of another!");
-                      }*/ else fprintf(flcommands, "CANTLV\n");
+                      }*/ else fprintf(flout, "CANT_LEAVE\n");
 
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case SVRTIDESNO: robotTurn(1); fprintf(flcommands, "RR\n"); ex(p->opr.op[0]);
+                case SVRTIDESNO: robotTurn(1); fprintf(flcommands, "TURN_RIGHT\n"); ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case SVRTILEVO: robotTurn(0); fprintf(flcommands, "RL\n"); ex(p->opr.op[0]);
+                case SVRTILEVO: robotTurn(0); fprintf(flcommands, "TURN_LEFT\n"); ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case '=':
                     return (symtab[p->opr.op[0]->id.i].value) = ex(p->opr.op[1]);

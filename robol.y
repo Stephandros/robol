@@ -218,14 +218,14 @@ varlist:
     $$ = opr(';',2,$1, id($3,$<iValue>0)); }
     ;
 */
-osnovna_komanda:
+  osnovna_komanda:
         ODI {$$=opr(ODI, 2, NULL, NULL);}
         |ZEMI {$$=opr(ZEMI, 2, NULL, NULL);}
         |OSTAVI {$$=opr(OSTAVI, 2, NULL, NULL);}
         |SVRTILEVO {$$=opr(SVRTILEVO, 2, NULL, NULL);}
         |SVRTIDESNO {$$=opr(SVRTIDESNO, 2, NULL, NULL);}
 		;
-komanda:
+    komanda:
 		  NEWLINE                            { $$ = opr(NEWLINE, 2, NULL, NULL); }
 		| osnovna_komanda NEWLINE		  	 { $$ = $1;  }
     | expr NEWLINE                       { $$ = $1; }
@@ -238,30 +238,44 @@ komanda:
 		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
 		//| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
         | VARIABLE '=' expr NEWLINE  {
-            if(symtab[$1].declared==0){
-                yyerror("not declared");
+          if($3==NULL) $$=NULL; else if(symtab[$1].declared==0){
+                sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string);
+                yyerror(error_string);
                 $$ = NULL;
                 }
             else if(symtab[$1].tip!=getType($3)){
-                printf("type is %d %d\n",getType($3),symtab[$1].tip);
-                yyerror("type mismatch");
+                yyerror("Type is doesn't match");
                 $$ = NULL;
                 }
                 else{
             $$ = opr('=', 2, id($1,symtab[$1].tip), $3); }}
-		| VARIABLE '=' NASOKA NEWLINE {
-            if(symtab[$1].declared==0)
-                yyerror("not declared");
-                else
-            if(symtab[$1].tip==0)
-                yyerror("not a nasoka");
-                else
+		      | VARIABLE '=' NASOKA NEWLINE {
+            if(symtab[$1].declared==0){
+            sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string);
+            $$=NULL;
+            }
+            else if(symtab[$1].tip==0){
+                yyerror("Type is doesn't match");
+                $$=NULL;
+              }
+            else
             $$ = opr('=', 2, id($1,symtab[$1].tip), con($3,1));
             }
-		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ, 2, $4, $9); }
-		| POVTORUVAJ expr PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE  { $$ = opr(POVTORUVAJ_2, 2, $2, $7); }
-        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE { $$ = opr(IF, 2, $3, $8); }
-        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE { $$ = opr(IF, 3, $3, $8, $15); }
+		| POVTORUVAJ DO '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE
+    {
+      if($4==NULL) $$=NULL;
+      else $$ = opr(POVTORUVAJ, 2, $4, $9);
+    }
+		| POVTORUVAJ expr PATI NEWLINE '!' NEWLINE komanda_list '!' NEWLINE
+    { if($2==NULL) $$=NULL;
+      else $$ = opr(POVTORUVAJ_2, 2, $2, $7);
+    }
+        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' %prec IFX NEWLINE {
+          if($3==NULL) $$=NULL;
+            else $$ = opr(IF, 2, $3, $8); }
+        | IF '(' expr ')' NEWLINE '!' NEWLINE komanda_list '!' NEWLINE ELSE NEWLINE '!' NEWLINE komanda_list '!' NEWLINE {
+          if($3==NULL) $$=NULL;
+            else $$ = opr(IF, 3, $3, $8, $15); }
         | functionCall {$$=$1;}
         | declVar { $$=NULL;}
         ;
@@ -336,7 +350,7 @@ expr:
 
 int hasError(nodeType *l, nodeType *r){
   if(l==NULL || r==NULL) {
-    yyerror("Cannot evaluate expression");
+    //yyerror("Cannot evaluate expression");
     return 1;
     }
     else if(getType(l)!=getType(r)) {

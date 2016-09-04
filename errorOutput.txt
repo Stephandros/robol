@@ -1,0 +1,9 @@
+Variable a not declared around line 1
+Variable a not declared around line 3
+Variable b not declared around line 6
+Variable b not declared around line 6
+Variable c not declared around line 6
+Variable c not declared around line 9
+Variable he not declared around line 13
+Type is doesn't match around line 17
+Type is doesn't match around line 18
