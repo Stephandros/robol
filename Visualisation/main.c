@@ -85,6 +85,7 @@ void postavi_okolina()
 
                 printf("Zid %d %d %d %d\n", mode, index, start, end);
                 fgets(line, sizeof(line), fp);
+
             } while(strncmp(line, kraj, 4) != 0);
             set_barrier_positions(barrier_positions, count);
         }

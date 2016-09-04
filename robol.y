@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "robol.h"
 
 /* prototypes */
@@ -13,11 +14,11 @@ nodeEnum getType(nodeType *p);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
-int env[100][100];
-int rows;
-int cols;
+//int env[100][100];
+extern int rows;
+extern int cols;
 int i,j;
-int ri,rj,rn;
+extern int ri,rj,rn;
 
 /* stack functions */
 int isempty();
@@ -78,69 +79,11 @@ extern int yylineno;
 program:
 		/*defOkolina NEWLINE END*/ eden END { return 0;};
     ;
-/*
-defOkolina:
-     okolina NEWLINE dzidovi NEWLINE zetoni NEWLINE robot
-    ;
-okolina:
-OKOLINA '(' INTEGER ',' INTEGER ')' {
-  cols=$3;
-  rows=$5;
-}
-    ;
 
-dzidovi:
-    DZIDOVI NEWLINE POCETOK NEWLINE dzidje  KRAJ
-    ;
-dzidje:
-    dzidje dzid NEWLINE
-    | dzid NEWLINE
-    ;
-dzid :
-    PRAVEC INTEGER INTEGER '-' INTEGER  {
-      if($1==0){//istok-zapad
-        i=rows-($2+1);
-        for(j=$3;j<$5;j++){
-          env[i][j]=1;
-        }
-      }
-    else if($1==1){
-      j=$2;
-      for(i=rows-($5);i<rows-($3);i++){
-        env[i][j]=1;
-      }
-    }
-
-
-    }
-    ;
-
-zetoni:
-    ZETONI NEWLINE POCETOK NEWLINE zetonje KRAJ
-    ;
-zetonje:
-    zetonje zeton NEWLINE
-    | zeton NEWLINE
-    ;
-zeton:
-    '(' INTEGER ',' INTEGER ')'{
-     env[rows-($4+1)][$2]=2;
-   }
-    ;
-
-robot:
-    ROBOT NASOKA '(' INTEGER ',' INTEGER ')'
-    {
-      rn=$2;
-      ri=rows-($4+1);
-      rj=$6;
-
-    }
-*/
 eden:
 	eden nesto
 	| /*NULL*/
-	| error NEWLINE { yyerror("ERROR!!!");}
+	| error NEWLINE { yyerror("ERROR!");}
 	;
 
 
@@ -291,7 +234,7 @@ komanda:
                                                else {
                                                $$ = opr(PRINT, 1, $2); }
                                                     }
-        //| decl NEWLINE                              {$$ = $1;}
+    //| decl NEWLINE                              {$$ = $1;}
 		//| VARIABLE ':' T_BROJ NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=0; $$ = id($1,0); }
 		//| VARIABLE ':' T_NASOKA NEWLINE			 { symtab[$1].declared = 1; symtab[$1].tip=1; $$ = id($1,1); }
         | VARIABLE '=' expr NEWLINE  {
@@ -338,31 +281,71 @@ expr:
           {  sprintf(error_string, "Variable %s not declared", symtab[$1].name);  yyerror(error_string); $$ = NULL; }
           else $$ = id($1,symtab[$1].tip);
         }
-        | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
-        | expr '+' expr         {
-          if($1==NULL || $3==NULL) {
+        | '-' expr %prec UMINUS {
+          if($2==NULL) {
             yyerror("Cannot evaluate expression.");
             $$=NULL;
-            }
-            else if(getType($1)!=getType($3)) {
-              yyerror("type doesn't match");
-              $$=NULL;
-            }
-            else $$ = oprt('+',getType($1), 2, $1, $3);
+          } else $$ = opr(UMINUS, 1, $2); }
+        | expr '+' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else $$ = oprt('+',getType($1), 2, $1, $3);
         }
-        | expr '-' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('-',getType($1), 2, $1, $3);  }
-        | expr '*' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('*',getType($1), 2, $1, $3);  }
-        | expr '/' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('/',getType($1), 2, $1, $3);  }
-        | expr '<' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('<',getType($1), 2, $1, $3);  }
-        | expr '>' expr         { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt('>',getType($1), 2, $1, $3);  }
-        | expr GE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(GE,3, 2, $1, $3);  }
-        | expr LE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(LE,3, 2, $1, $3);  }
-        | expr NE expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(NE, 3, 2, $1, $3);  }
-        | expr EQ expr          { if(getType($1)!=getType($3)) yyerror("type doesn't match");  $$ = oprt(EQ,3, 2, $1, $3);  }
+        | expr '-' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else $$ = oprt('-',getType($1), 2, $1, $3);
+        }
+        | expr '*' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else $$ = oprt('*',getType($1), 2, $1, $3);
+        }
+        | expr '/' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else $$ = oprt('/',getType($1), 2, $1, $3);  }
+        | expr '<' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else $$ = oprt('<',getType($1), 2, $1, $3);  }
+        | expr '>' expr         {
+          if(hasError($1,$3))
+            $$=NULL;
+          else  $$ = oprt('>',getType($1), 2, $1, $3);  }
+        | expr GE expr          {
+          if(hasError($1,$3))
+            $$=NULL;
+          else  $$ = oprt(GE,3, 2, $1, $3);  }
+        | expr LE expr          {
+          if(hasError($1,$3))
+            $$=NULL;
+          else  $$ = oprt(LE,3, 2, $1, $3);  }
+        | expr NE expr          {
+          if(hasError($1,$3))
+            $$=NULL;
+          else  $$ = oprt(NE, 3, 2, $1, $3);  }
+        | expr EQ expr          {
+          if(hasError($1,$3))
+            $$=NULL;
+          else   $$ = oprt(EQ,3, 2, $1, $3);  }
         | '(' expr ')'          { $$ = $2; }
         ;
 
 %%
+
+int hasError(nodeType *l, nodeType *r){
+  if(l==NULL || r==NULL) {
+    yyerror("Cannot evaluate expression");
+    return 1;
+    }
+    else if(getType(l)!=getType(r)) {
+      yyerror("Type doesn't match");
+      return 1;
+    }
+
+  return 0;
+}
 
 nodeEnum getType(nodeType *p){
 
@@ -424,7 +407,6 @@ nodeType *opr(int oper, int nops, ...) {
     return p;
 }
 
-
 nodeType *oprt(int oper, int t, int nops, ...) {
     va_list ap;
     nodeType *p;
@@ -438,7 +420,7 @@ nodeType *oprt(int oper, int t, int nops, ...) {
     p->type = typeOpr;
     p->opr.oper = oper;
     p->opr.nops = nops;
-	p->opr.s_type = t;
+	  p->opr.s_type = t;
     va_start(ap, nops);
     for (i = 0; i < nops; i++)
         p->opr.op[i] = va_arg(ap, nodeType*);
@@ -457,7 +439,7 @@ nodeType *fct(nodeType *l, nodeType *r) {
     /* copy information */
     p->type = typeFunction;
     p->opr.op[0] = l;
-	p->opr.op[1] = r;
+	  p->opr.op[1] = r;
 
 	return p;
 }
@@ -474,60 +456,17 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(char *s) {
-    fprintf(flerror, "%s at line %d\n", s,yylineno);
-
-}
-
-int main(void) {
-
-    symtab = symboltable;
-    error_string = (char*)malloc(50 * sizeof(char));
-    extern FILE* yyin;
-    flout = fopen("printingOutput.txt","w+");
-    flin = fopen("input.txt","r");
-    flrimal = fopen("rimalOutput.txt","w+");
-    flerror = fopen("errorOutput.txt","w+");
-    flcommands = fopen("commandsOutput.txt","w+");
-    char buff[255];
-
-    yyin=flin;
-
-    yyparse();
-
-
-    for(int i=0;i<rows;i++){
-    for(int j=0;j<cols;j++)
-      fprintf(flout,"%d ",env[i][j]);
-    fprintf(flout,"\n");
-    }
-
-    fprintf(flout,"End of program!");
-    fflush(flout);
-    fflush(flin);
-    fflush(flrimal);
-    fflush(flerror);
-    fflush(flcommands);
-
-    fclose(flout);
-    fclose(flin);
-    fclose(flrimal);
-    fclose(flerror);
-    fclose(flcommands);
-
-    return 0;
-
-
+    fprintf(flerror, "%s around line %d\n", s,yylineno);
 }
 
 #define ROBOT   1
 #define COIN    2
 #define BARRIER 3
 
-int** ENVIRONMENT;    
-int prev_dim = 0;    
+extern int ENVIRONMENT[100][100];
+int prev_dim = 0;
 
-void setup_environment()
-{
+void setup_environment(){
     char environment[]     = "Okolina";
     char barriers[]        = "Zidovi";
     char coins[]           = "Zetoni";
@@ -538,40 +477,41 @@ void setup_environment()
     FILE *fp;
     if((fp = fopen("okolina.env", "r")) == NULL)
     {
-        printf("Can't open file!\n");
+        fprintf(flout,"Cannot open okolina.env!");
         return;
     }
 
-    char line[100];    
+    char line[100];
     int i, j;
 
     while(fgets(line, sizeof(line), fp))
     {
         if(strncmp(line, environment, 7) == 0)
-        {            
+        {
             fgets(line, sizeof(line), fp);
             char * split;
             split = strtok(line, " ");
             int row_count = atoi(split);
             split = strtok(NULL, " ");
-            int col_count = atoi(split);                        
+            int col_count = atoi(split);
 
-            for (i = 0; i < prev_dim; ++i)
+            rows=cols=row_count;
+            /*for (i = 0; i < prev_dim; ++i)
                 delete [] ENVIRONMENT[i];
-            delete [] ENVIRONMENT;
+            delete [] ENVIRONMENT;*/
 
             prev_dim = row_count;
 
             // For simplicity our enviroment will have square base.
-            ENVIRONMENT = new int*[row_count];
+            /*ENVIRONMENT = new int*[row_count];
             for (i = 0; i < row_count; ++i)
                 ENVIRONMENT[i] = new int[row_count];
-            for (i = 0; i < row_count; ++i)            
+            for (i = 0; i < row_count; ++i)
                 for (j = 0; j < row_count; ++j)
-                    ENVIRONMENT[i][j] = 0;            
+                    ENVIRONMENT[i][j] = 0;*/
         }
         else if(strncmp(line, barriers, 6) == 0)
-        {            
+        {
             fgets(line, sizeof(line), fp);
             fgets(line, sizeof(line), fp);
             int count = 0;
@@ -586,20 +526,32 @@ void setup_environment()
                 int start = atoi(split);
                 split = strtok(NULL, " ");
                 int end = atoi(split);
+                int tmp;
+
+                if(direction==1) {
+                  start = rows - start;
+                  end = rows - end;
+                  tmp = start;
+                  start = end;
+                  end = tmp;
+                } else if(direction==0){
+                  location = rows - (location + 1);
+                }
 
                 for(i = start; i < end; ++i)
                 {
-                    if(direction == 0)                      // VERTICAL
-                        ENVIRONMENT[i][location] = BARRIER;                        
-                    else if(direction == 1)                 // HORIZONTAL
-                    ENVIRONMENT[location][i] = BARRIER;
+                    if(direction == 0)                      // HORIZONTAL
+                        ENVIRONMENT[location][i] = BARRIER;
+                    else if(direction == 1)                 // VERTICAL
+                    ENVIRONMENT[i][location] = BARRIER;
                 }
-                
-            } while(strncmp(line, end, 4) != 0);            
+
+                fgets(line, sizeof(line), fp);
+            } while(strncmp(line, end, 4) != 0);
         }
         else if(strncmp(line, coins, 6) == 0)
         {
-            Indices coin_positions[100];
+
             fgets(line, sizeof(line), fp);
             fgets(line, sizeof(line), fp);
             int count = 0;
@@ -607,34 +559,64 @@ void setup_environment()
             {
                 char * split;
                 split = strtok(line, " ");
-                i = atoi(split);
-                split = strtok(NULL, " ");
                 j = atoi(split);
-
+                split = strtok(NULL, " ");
+                i = atoi(split);
+                i=rows-(i+1);
                 ENVIRONMENT[i][j] = COIN;
 
                 fgets(line, sizeof(line), fp);
-            } while(strncmp(line, end, 4) != 0);            
+            } while(strncmp(line, end, 4) != 0);
         }
         else if(strncmp(line, robot, 5) == 0)
         {
             fgets(line, sizeof(line), fp);
             char * split;
             split = strtok(line, " ");
-            i = atoi(split);
-            split = strtok(NULL, " ");
             j = atoi(split);
-            
-            ENVIRONMENT[i][j] = ROBOT;
+            split = strtok(NULL, " ");
+            i = atoi(split);
+            i=rows-(i+1);
+            ri=i;
+            rj=j;
+            //ENVIRONMENT[i][j] = ROBOT;
         }
-        /* Do we need this?
+
         else if(strncmp(line, robot_direction, 12) == 0)
         {
             fgets(line, sizeof(line), fp);
-            int direction = atoi(line);            
+            rn = atoi(line);
         }
-        */
+
     }
 
     fclose(fp);
+}
+
+int main(void) {
+
+    symtab = symboltable;
+    error_string = (char*)malloc(50 * sizeof(char));
+    extern FILE* yyin;
+    flout = fopen("printingOutput.txt","w+");
+    flin = fopen("input.txt","r");
+    flrimal = fopen("rimalOutput.txt","w+");
+    flerror = fopen("errorOutput.txt","w+");
+    flcommands = fopen("commandsOutput.txt","w+");
+    char buff[255];
+
+    setup_environment();
+    yyin=flin;
+    yyparse();
+
+    fprintf(flout,"End of program!");
+
+    fclose(flout);
+    fclose(flin);
+    fclose(flrimal);
+    fclose(flerror);
+    fclose(flcommands);
+
+    return 0;
+
 }

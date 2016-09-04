@@ -1,2 +1,0 @@
-Variable d not declared at line 5
-Cannot evaluate expression. at line 5

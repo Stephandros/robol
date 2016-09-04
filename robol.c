@@ -6,9 +6,50 @@
 #include "robol.h"
 #include "y.tab.h"
 
+#define ROBOT   1
+#define COIN    2
+#define BARRIER 3
 
 FILE *flout, *flrimal, *flerror, *flcommands;
+int ENVIRONMENT[100][100];
+int nbrCoins = 0;
+int ri,rj,rn;
+int rows, cols;
 
+void robotMove(){
+  switch(rn){
+    case 0: ri--; break;
+    case 1: rj++; break;
+    case 2: ri++; break;
+    case 3: rj--; break;
+  }
+};
+
+int mod(int a, int b){
+    int ret = a%b;
+    if(ret<0) ret+=b;
+    return ret;
+}
+void robotTurn(int direction){
+    //0 left, 1 right
+    if(direction==0)
+      rn=mod(rn-1,4);
+    if(direction==1)
+      rn=mod(rn+1,4);
+}
+int canMove(){
+  if(rn==0) // north
+    return ri-1>=0 && ENVIRONMENT[ri-1][rj] != BARRIER;
+
+  if(rn==1) // east
+    return rj+1<cols && ENVIRONMENT[ri][rj+1] != BARRIER;
+
+  if(rn==1) // south
+      return ri+1<rows && ENVIRONMENT[ri+1][rj] != BARRIER;
+
+  if(rn==1) // west
+      return rj-1>=cols && ENVIRONMENT[ri][rj-1] != BARRIER;
+}
 
 /* symbol table */
 /* hash a symbol */
@@ -132,15 +173,42 @@ int ex(nodeType *p) {
                 case NEWLINE:
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case ODI: fprintf(flcommands, "GO\n"); ex(p->opr.op[0]);
+                case ODI:
+                    if(canMove()){
+                    robotMove();
+                    fprintf(flcommands, "GO\n");
+                    }
+                    else {
+                    fprintf(flcommands, "CANTGO\n");
+                    }
+                    ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case ZEMI: fprintf(flcommands, "TK\n"); ex(p->opr.op[0]);
+                case ZEMI:
+                    if(ENVIRONMENT[ri][rj]==COIN){
+                    fprintf(flcommands, "TK\n");
+                    nbrCoins++;
+                    ENVIRONMENT[ri][rj]=0;
+                    }
+                    else {
+                      fprintf(flcommands, "CANTTK\n");
+                    }
+                    ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case OSTAVI: fprintf(flcommands, "LV\n"); ex(p->opr.op[0]);
+                case OSTAVI:
+                    if(nbrCoins>0 && ENVIRONMENT[ri][rj]==0){
+                      fprintf(flcommands, "LV\n");
+                      nbrCoins--;
+                      ENVIRONMENT[ri][rj]=COIN;
+                      }
+                      /*else if (ENVIRONMENT[ri][rj]==COIN){
+                        fprintf(flerror, "LV command ignored. You cannot place a coin on top of another!");
+                      }*/ else fprintf(flcommands, "CANTLV\n");
+
+                    ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case SVRTIDESNO: fprintf(flcommands, "RR\n"); ex(p->opr.op[0]);
+                case SVRTIDESNO: robotTurn(1); fprintf(flcommands, "RR\n"); ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
-                case SVRTILEVO: fprintf(flcommands, "RL\n"); ex(p->opr.op[0]);
+                case SVRTILEVO: robotTurn(0); fprintf(flcommands, "RL\n"); ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case '=':
                     return (symtab[p->opr.op[0]->id.i].value) = ex(p->opr.op[1]);
