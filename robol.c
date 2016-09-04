@@ -38,17 +38,18 @@ void robotTurn(int direction){
       rn=mod(rn+1,4);
 }
 int canMove(){
+	
   if(rn==0) // north
-    return ri-1>=0 && ENVIRONMENT[ri-1][rj] != BARRIER;
+    return ri-1>=0 && ENVIRONMENT[+ri-1][rj] != BARRIER;
 
   if(rn==1) // east
     return rj+1<cols && ENVIRONMENT[ri][rj+1] != BARRIER;
 
-  if(rn==1) // south
+  if(rn==2) // south
       return ri+1<rows && ENVIRONMENT[ri+1][rj] != BARRIER;
 
-  if(rn==1) // west
-      return rj-1>=cols && ENVIRONMENT[ri][rj-1] != BARRIER;
+  if(rn==3) // west
+      return rj-1>=0 && ENVIRONMENT[ri][rj-1] != BARRIER;
 }
 
 /* symbol table */

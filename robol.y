@@ -489,7 +489,7 @@ void setup_environment(){
     char end[]             = "kraj";
 
     FILE *fp;
-    if((fp = fopen("okolina.env", "r")) == NULL)
+    if((fp = fopen("../okolina.env", "r")) == NULL)
     {
         fprintf(flout,"Cannot open okolina.env!");
         return;
@@ -620,6 +620,14 @@ int main(void) {
     char buff[255];
 
     setup_environment();
+	
+	/*for(i=0;i<rows;i++)
+	{
+	for(j=0;j<cols;j++)
+	fprintf(flout,"%d ",ENVIRONMENT[i][j]);
+	fprintf(flout,"\n");
+	}*/
+	
     yyin=flin;
     yyparse();
 
