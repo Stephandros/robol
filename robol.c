@@ -175,6 +175,8 @@ int ex(nodeType *p) {
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case ODI:
+                    fprintf(flcommands, "WALK\n");
+                    /*
                     if(canMove()){
                     robotMove();
                     fprintf(flcommands, "WALK\n");
@@ -182,9 +184,12 @@ int ex(nodeType *p) {
                     else {
                     fprintf(flout, "CANT_WALK\n");
                     }
+                    */
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case ZEMI:
+                    fprintf(flcommands, "TAKE\n");
+                    /*
                     if(ENVIRONMENT[ri][rj]==COIN){
                     fprintf(flcommands, "TAKE\n");
                     nbrCoins++;
@@ -193,18 +198,19 @@ int ex(nodeType *p) {
                     else {
                       fprintf(flout, "CANT_TAKE\n");
                     }
+                    */
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case OSTAVI:
+                    fprintf(flcommands, "LEAVE\n");
+                    /*
                     if(nbrCoins>0 && ENVIRONMENT[ri][rj]==0){
-                      fprintf(flcommands, "LEAVE\n");
-                      nbrCoins--;
-                      ENVIRONMENT[ri][rj]=COIN;
-                      }
-                      /*else if (ENVIRONMENT[ri][rj]==COIN){
-                        fprintf(flerror, "LV command ignored. You cannot place a coin on top of another!");
-                      }*/ else fprintf(flout, "CANT_LEAVE\n");
-
+                    fprintf(flcommands, "LEAVE\n");
+                    nbrCoins--;
+                    ENVIRONMENT[ri][rj]=COIN;
+                    }
+                    else fprintf(flout, "CANT_LEAVE\n");
+                    */
                     ex(p->opr.op[0]);
                     return ex(p->opr.op[1]);
                 case SVRTIDESNO: robotTurn(1); fprintf(flcommands, "TURN_RIGHT\n"); ex(p->opr.op[0]);

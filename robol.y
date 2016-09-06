@@ -619,7 +619,7 @@ int main(void) {
     flcommands = fopen("commandsOutput.txt","w+");
     char buff[255];
 
-    setup_environment();
+    //setup_environment();
 	
 	/*for(i=0;i<rows;i++)
 	{
